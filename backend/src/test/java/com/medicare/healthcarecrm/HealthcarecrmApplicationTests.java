@@ -1,10 +1,10 @@
-package com.j2ee.health_care_crm;
+package com.medicare.healthcarecrm;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class HealthCareCrmApplicationTests {
+class HealthcarecrmApplicationTests {
 
 	@Test
 	void contextLoads() {
