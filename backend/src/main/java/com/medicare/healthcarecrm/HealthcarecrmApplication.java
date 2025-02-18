@@ -1,13 +1,13 @@
-package com.j2ee.health_care_crm;
+package com.medicare.healthcarecrm;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HealthCareCrmApplication {
+public class HealthcarecrmApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(HealthCareCrmApplication.class, args);
+		SpringApplication.run(HealthcarecrmApplication.class, args);
 	}
 
 }
