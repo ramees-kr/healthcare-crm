@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Customer Form</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 th:text="${customer.id} != null ? 'Edit Customer' : 'Add Customer'"></h2>
+    <div class="card">
+        <div class="card-body">
+            <form th:action="${customer.id} != null ? '/admin/customers/update/' + ${customer.id} : '/admin/customers/add'"
+                  th:object="${customer}"
+                  method="post">
+
+                <!-- Hidden Field for ID -->
+                <input type="hidden" th:field="*{id}">
+
+                <div class="mb-3">
+                    <label class="form-label">Name:</label>
+                    <input type="text" class="form-control" th:field="*{name}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Age:</label>
+                    <input type="number" class="form-control" th:field="*{age}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Gender:</label>
+                    <select class="form-control" th:field="*{gender}" required>
+                        <option value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email:</label>
+                    <input type="email" class="form-control" th:field="*{email}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Medical History:</label>
+                    <textarea class="form-control" th:field="*{medicalHistory}" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Contact Details:</label>
+                    <input type="text" class="form-control" th:field="*{contactDetails}" required>
+                </div>
+
+                <h3>Insurance Details</h3>
+                <input type="hidden" th:field="*{insurance.id}">
+                <div class="mb-3">
+                    <label class="form-label">Provider:</label>
+                    <input type="text" class="form-control" th:field="*{insurance.provider}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Policy Number:</label>
+                    <input type="text" class="form-control" th:field="*{insurance.policyNumber}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Coverage Details:</label>
+                    <textarea class="form-control" th:field="*{insurance.coverageDetails}" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Expiry Date:</label>
+                    <input type="datetime-local" class="form-control" th:field="*{insurance.expiryDate}" required>
+                </div>
+
+                <span style="color: red;" th:text="${error}"></span>
+                <button type="submit" class="btn btn-success">Save</button>
+                <a th:href="@{/admin/customers}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

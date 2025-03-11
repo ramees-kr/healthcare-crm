@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/admin/layout}">
+<head>
+    <title>Customer and Insurance Management</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="h2">Customer and Insurance Management</h2>
+    <div class="table-responsive">
+        <a th:href="@{/admin/customers/add}" class="btn btn-sm btn-primary">Add Customer</a>
+        <table class="table table-striped table-sm">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Email</th>
+                <th>Medical History</th>
+                <th>Contact Details</th>
+                <th>Insurance Provider</th>
+                <th>Policy Number</th>
+                <th>Coverage Details</th>
+                <th>Expiry Date</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="customer : ${customers}">
+                <td th:text="${customer.name}"></td>
+                <td th:text="${customer.age}"></td>
+                <td th:text="${customer.gender}"></td>
+                <td th:text="${customer.email}"></td>
+                <td th:text="${customer.medicalHistory}"></td>
+                <td th:text="${customer.contactDetails}"></td>
+                <td th:text="${customer.insurance.provider}"></td>
+                <td th:text="${customer.insurance.policyNumber}"></td>
+                <td th:text="${customer.insurance.coverageDetails}"></td>
+                <td th:text="${#temporals.format(customer.insurance.expiryDate, 'dd/MM/yyyy')}"></td>
+                <td>
+                    <a th:href="@{/admin/customers/update/{id}(id=${customer.id})}"
+                       class="btn btn-sm btn-primary">Edit</a>
+                    <a th:href="@{/admin/customers/delete/{id}(id=${customer.id})}"
+                       th:onclick="return confirm('Are you sure you want to delete this employee?')"
+                       class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

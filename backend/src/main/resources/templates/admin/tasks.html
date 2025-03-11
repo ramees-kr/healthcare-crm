@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/admin/layout}">
+<head>
+    <title>Tasks Management</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="h2">Tasks Management</h2>
+    <div class="table-responsive">
+        <a th:href="@{/admin/tasks/add}" class="btn btn-sm btn-primary">Add Task</a>
+        <table class="table table-striped table-sm">
+            <thead>
+            <tr>
+                <th>Task Name</th>
+                <th>Customer</th>
+                <th>Employee</th>
+                <th>Due Date</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="task : ${tasks}">
+                <td th:text="${task.taskName}"></td>
+                <td th:text="${task.customer.name}"></td>
+                <td th:text="${task.employee.name}"></td>
+                <td th:text="${#temporals.format(task.dueDate, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${task.priority}"></td>
+                <td th:text="${task.status}"></td>
+                <td>
+                    <a th:href="@{/admin/tasks/update/{id}(id=${task.id})}" class="btn btn-sm btn-primary">Edit</a>
+                    <a th:href="@{/admin/tasks/delete/{id}(id=${task.id})}" th:onclick="return confirm('Are you sure you want to delete this task?')" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
