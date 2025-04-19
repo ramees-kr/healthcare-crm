@@ -4,37 +4,13 @@
       layout:decorate="~{/admin/layout}">
 <head>
     <title>Admin Dashboard</title>
-    <style>
-        .dashboard-card .card-body {
-            display: flex;
-            align-items: center; /* Vertically center icon and text */
-        }
-        .dashboard-card .card-icon {
-            font-size: 2.5rem; /* Make icon larger */
-            margin-right: 1rem;
-            color: #6c757d; /* Secondary color */
-        }
-        .dashboard-card .card-text {
-            font-size: 1.5rem; /* Larger count text */
-            font-weight: bold;
-        }
-        .dashboard-card .card-title {
-            font-size: 0.9rem; /* Smaller label text */
-            margin-bottom: 0;
-        }
-        .dashboard-card .card-link {
-            font-size: 0.9rem;
-        }
-    </style>
 </head>
-<body>
+<body class="admin-layout"> <th:block layout:fragment="page-title">Dashboard</th:block>
 
-<th:block layout:fragment="page-title">Dashboard</th:block>
-
-<div layout:fragment="content">
+<div layout:fragment="content" id="admin-dashboard">
 
     <div th:if="${dashboardError}" class="alert alert-danger" role="alert">
-        <i class="bi bi-exclamation-triangle-fill"></i> Error: <span th:text="${dashboardError}"></span>
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> Error: <span th:text="${dashboardError}"></span>
     </div>
 
     <div class="row" th:unless="${dashboardError}">
@@ -42,14 +18,14 @@
             <div class="card dashboard-card h-100">
                 <div class="card-body">
                     <div class="card-icon">
-                        <i class="bi bi-people-fill"></i> </div>
+                        <i class="bi bi-people-fill"></i>
+                    </div>
                     <div>
                         <h5 class="card-title text-muted text-uppercase">Total Customers</h5>
                         <p class="card-text" th:text="${customerCount != null ? customerCount : 'N/A'}">0</p>
                     </div>
                 </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <a th:href="@{/admin/customers}" class="card-link">View Details <i class="bi bi-arrow-right-circle"></i></a>
+                <div class="card-footer bg-transparent border-top-0 pt-0"> <a th:href="@{/admin/customers}" class="card-link small">View Details <i class="bi bi-arrow-right-circle"></i></a>
                 </div>
             </div>
         </div>
@@ -58,14 +34,15 @@
             <div class="card dashboard-card h-100">
                 <div class="card-body">
                     <div class="card-icon">
-                        <i class="bi bi-person-badge-fill"></i> </div>
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
                     <div>
                         <h5 class="card-title text-muted text-uppercase">Total Employees</h5>
                         <p class="card-text" th:text="${employeeCount != null ? employeeCount : 'N/A'}">0</p>
                     </div>
                 </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <a th:href="@{/admin/employees}" class="card-link">View Details <i class="bi bi-arrow-right-circle"></i></a>
+                <div class="card-footer bg-transparent border-top-0 pt-0">
+                    <a th:href="@{/admin/employees}" class="card-link small">View Details <i class="bi bi-arrow-right-circle"></i></a>
                 </div>
             </div>
         </div>
@@ -74,17 +51,19 @@
             <div class="card dashboard-card h-100">
                 <div class="card-body">
                     <div class="card-icon">
-                        <i class="bi bi-list-task"></i> </div>
+                        <i class="bi bi-list-task"></i>
+                    </div>
                     <div>
                         <h5 class="card-title text-muted text-uppercase">Pending Tasks</h5>
                         <p class="card-text" th:text="${pendingTaskCount != null ? pendingTaskCount : 'N/A'}">0</p>
                     </div>
                 </div>
-                <div class="card-footer bg-transparent border-top-0">
-                    <a th:href="@{/admin/tasks}" class="card-link">View All Tasks <i class="bi bi-arrow-right-circle"></i></a>
+                <div class="card-footer bg-transparent border-top-0 pt-0">
+                    <a th:href="@{/admin/tasks}" class="card-link small">View All Tasks <i class="bi bi-arrow-right-circle"></i></a>
                 </div>
             </div>
         </div>
-    </div> </div>
+    </div>
+</div>
 </body>
 </html>

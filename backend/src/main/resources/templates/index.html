@@ -4,136 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healthcare CRM - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: sans-serif; /* Or your preferred font */
-        }
-
-        .bg {
-            /* Add your image URL here */
-            background-image: url("/images/login-background-image.png"); /* Example using local image */
-
-            /* Full height */
-            height: 100%;
-
-            /* Center and scale the image nicely */
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-
-            /* Use flexbox to align content */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .login-container {
-            /* <<< CHANGE: Adjusted transparency (0.9 = 90% opaque) >>> */
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 2.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
-            width: 100%;
-            max-width: 450px; /* Max width of the form container */
-        }
-
-        /* Adjust Bootstrap primary color to match app theme */
-        .btn-primary {
-            background-color: #0d6efd; /* Standard Bootstrap Blue */
-            border-color: #0d6efd;
-        }
-        .btn-primary:hover {
-            background-color: #0b5ed7;
-            border-color: #0a58ca;
-        }
-
-        .form-floating label {
-            color: #6c757d; /* Muted label color */
-        }
-
-        .alert {
-            font-size: 0.9em;
-        }
-        .crm-title {
-            color: #0d6efd; /* Title color matches primary */
-            font-weight: 300; /* Lighter title */
-            margin-bottom: 1rem;
-        }
-        .crm-title i {
-            margin-right: 0.5rem;
-        }
-        .footer-text {
-            font-size: 0.85em;
-            color: #6c757d;
-            margin-top: 2rem;
-        }
-
-        /* Responsive adjustments: On smaller screens, center the form */
-        @media (max-width: 767.98px) {
-            /* Optional: add more padding or different background on small screens */
-            .login-container {
-                margin: 1rem; /* Add some margin on small screens */
-            }
-        }
-
-    </style>
+    <link href="/css/custom.css" rel="stylesheet">
 </head>
-<body>
+<body class="login-page">
 
-<div class="bg"> <div class="container">
+<div class="bg d-flex align-items-center justify-content-center min-vh-100"> <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-7 col-lg-5 col-xl-4"> <div class="login-container">
-            <div class="text-center">
-                <h2 class="crm-title"><i class="bi bi-heart-pulse-fill"></i> Healthcare CRM</h2>
-                <p class="text-muted mb-4">Please sign in</p>
-            </div>
+        <div class="col-md-8 col-lg-6 col-xl-5">
+            <div class="login-container">
+                <div class="text-center">
+                    <h2 class="crm-title h3 mb-3"><i class="bi bi-heart-pulse-fill me-2"></i>Healthcare CRM</h2> <p class="text-muted mb-4">Please sign in</p>
+                </div>
 
-            <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <div>
+                <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2"></i> <div>
                     Invalid username or password.
                 </div>
-            </div>
-
-            <div th:if="${param.logout}" class="alert alert-success d-flex align-items-center" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <div>
+                </div>
+                <div th:if="${param.logout}" class="alert alert-success d-flex align-items-center" role="alert">
+                    <i class="bi bi-check-circle-fill flex-shrink-0 me-2"></i> <div>
                     You have been logged out.
                 </div>
-            </div>
-
-            <form th:action="@{/login}" method="post" class="mt-3">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-                <div class="form-floating mb-3">
-                    <input type="email" id="username" name="username" class="form-control" placeholder="name@example.com" required autofocus>
-                    <label for="username"><i class="bi bi-envelope-fill"></i> Email address</label>
                 </div>
 
-                <div class="form-floating mb-4">
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
-                    <label for="password"><i class="bi bi-lock-fill"></i> Password</label>
-                </div>
+                <form th:action="@{/login}" method="post" class="mt-3">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-box-arrow-in-right"></i> Login
-                    </button>
-                </div>
-            </form>
-            <p class="text-center footer-text">
-                &copy; <span th:text="${#dates.year(#dates.createNow())}">2025</span> Healthcare CRM
-            </p>
-        </div>
-        </div>
+                    <div class="form-floating mb-3">
+                        <input type="email" id="username" name="username" class="form-control" placeholder="name@example.com" required autofocus>
+                        <label for="username"><i class="bi bi-envelope-fill me-1"></i> Email address</label> </div>
+
+                    <div class="form-floating mb-4">
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+                        <label for="password"><i class="bi bi-lock-fill me-1"></i> Password</label> </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Login </button>
+                    </div>
+                </form>
+
+                <p class="text-center footer-text mt-4"> &copy; <span th:text="${#dates.year(#dates.createNow())}">2025</span> Healthcare CRM
+                </p>
+            </div> </div>
     </div>
 </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+</div> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 </body>
 </html>
