@@ -4,28 +4,17 @@
       layout:decorate="~{/admin/layout}">
 <head>
     <title>Customer Management</title>
-    <style>
-        .action-buttons a {
-            margin-right: 5px; /* Space between buttons */
-        }
-        .action-buttons {
-            white-space: nowrap;
-        }
-
-    </style>
 </head>
-<body>
+<body class="admin-layout"> <th:block layout:fragment="page-title">Customer Management</th:block>
 
-<th:block layout:fragment="page-title">Customer Management</th:block>
-
-<div layout:fragment="content">
+<div layout:fragment="content" class="admin-customers-page">
 
     <a th:href="@{/admin/customers/add}" class="btn btn-primary mb-3">
-        <i class="bi bi-person-plus-fill"></i> Add Customer
+        <i class="bi bi-person-plus-fill me-1"></i> Add Customer
     </a>
 
     <div th:if="${deleteError}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle-fill"></i> Error: <span th:text="${deleteError}"></span>
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> Error: <span th:text="${deleteError}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
@@ -43,12 +32,12 @@
                 <th scope="col">Insurance Provider</th>
                 <th scope="col">Policy #</th>
                 <th scope="col">Insurance Expiry</th>
-                <th scope="col" class="text-center" style="min-width: 120px;">Actions</th>
-            </tr>
+                <th scope="col" class="text-center" style="min-width: 120px;">Actions</th> </tr>
             </thead>
             <tbody>
             <tr th:if="${#lists.isEmpty(customers)}">
-                <td colspan="10" class="text-center text-muted">No customers found.</td> </tr>
+                <td colspan="10" class="text-center text-muted">No customers found.</td>
+            </tr>
             <tr th:each="customer : ${customers}">
                 <td th:text="${customer.name}"></td>
                 <td th:text="${customer.age}"></td>
@@ -62,13 +51,13 @@
                 <td class="text-center action-buttons">
                     <a th:href="@{/admin/customers/update/{id}(id=${customer.id})}"
                        class="btn btn-sm btn-outline-primary" title="Edit Customer">
-                        <i class="bi bi-pencil-fill"></i> Edit
+                        <i class="bi bi-pencil-fill me-1"></i> Edit
                     </a>
                     <a th:href="@{/admin/customers/delete/{id}(id=${customer.id})}"
                        th:data-customer-name="${customer.name}"
                        onclick="return confirmCustomerDelete(this);"
                        class="btn btn-sm btn-outline-danger" title="Delete Customer">
-                        <i class="bi bi-trash-fill"></i> Delete
+                        <i class="bi bi-trash-fill me-1"></i> Delete
                     </a>
                 </td>
             </tr>
