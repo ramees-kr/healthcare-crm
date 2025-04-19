@@ -3,332 +3,395 @@ package com.medicare.healthcarecrm.controller;
 import com.medicare.healthcarecrm.model.Customer;
 import com.medicare.healthcarecrm.model.Employee;
 import com.medicare.healthcarecrm.model.Tasks;
-import com.medicare.healthcarecrm.service.AdminService;
 import com.medicare.healthcarecrm.service.CustomerService;
 import com.medicare.healthcarecrm.service.EmployeeService;
 import com.medicare.healthcarecrm.service.TaskService;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.validation.annotation.Validated;
+import jakarta.validation.groups.Default; // Import Default group
+import com.medicare.healthcarecrm.validation.OnCreate;
+
+import org.springframework.dao.DataAccessException; // Import Spring DAO exception
+import org.springframework.dao.DataIntegrityViolationException; // Import specific exception
 
 @RequestMapping("/admin")
 @Controller
 public class AdminController {
 
-    @Autowired
-    private AdminService adminService;
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
+
     private final TaskService taskService;
     private final EmployeeService employeeService;
     private final CustomerService customerService;
 
-    public AdminController(AdminService adminService, TaskService taskService, EmployeeService employeeService, CustomerService customerService) {
-        this.adminService = adminService;
+    // Constructor Injection
+    public AdminController(TaskService taskService, EmployeeService employeeService, CustomerService customerService) {
         this.taskService = taskService;
         this.employeeService = employeeService;
         this.customerService = customerService;
     }
 
-    @GetMapping
+    // === GET Mappings ===
+
+    @GetMapping // Maps to /admin
     public String home(Model model) {
-        if (isValidLogin()) {
-            return "admin/admin";
+        model.addAttribute("activePage", "dashboard");
+        try {
+            long customerCount = customerService.getCustomerCount();
+            long employeeCount = employeeService.getEmployeeCount();
+            long pendingTaskCount = taskService.getTaskCountByStatus("Pending");
+            model.addAttribute("customerCount", customerCount);
+            model.addAttribute("employeeCount", employeeCount);
+            model.addAttribute("pendingTaskCount", pendingTaskCount);
+        } catch (Exception e) {
+            log.error("Error fetching dashboard counts: {}", e.getMessage(), e);
+            model.addAttribute("dashboardError", "Could not load dashboard data.");
         }
-        return "redirect:/";
+        return "admin/admin";
     }
 
     @GetMapping("/tasks")
     public String showTasks(Model model) {
-        if (isValidLogin()) {
-            model.addAttribute("tasks", taskService.getAllTasks());
-            return "admin/tasks";
-        }
-        return "redirect:/";
+        model.addAttribute("activePage", "tasks");
+        model.addAttribute("tasks", taskService.getAllTasks());
+        return "admin/tasks";
     }
 
     @GetMapping({"tasks/add", "tasks/update/{id}"})
-    public String addTask(@PathVariable(required = false) Long id, Model model) {
-        if (isValidLogin()) {
-            Tasks tasks = (id != null) ? taskService.getTaskById(id) : new Tasks();
-            model.addAttribute("task", tasks);
-            model.addAttribute("customers", customerService.getAllCustomers());
-            model.addAttribute("employees", employeeService.getAllEmployees());
-            return "admin/addTask";
-        }
-        return "redirect:/";
-    }
-
-    @PostMapping({"tasks/add", "tasks/update/{id}"})
-    public String addTask(@PathVariable(required = false) Long id, Tasks tasks, Model model) {
-        if (isValidLogin()) {
-            String error = null;
-            if (id != null) {
-                error = taskService.updateTask(tasks, id);
-            } else {
-                error = taskService.createTask(tasks);
+    public String showAddTaskForm(@PathVariable(required = false) Long id, Model model) {
+        model.addAttribute("activePage", "tasks");
+        Tasks task;
+        if (id != null) {
+            task = taskService.getTaskById(id);
+            if (task == null) {
+                log.warn("Task with id {} not found for update, showing add form.", id);
+                task = new Tasks();
+                // Consider adding a flash attribute here to inform user task wasn't found
             }
-            if (error != null) {
-                model.addAttribute("task", tasks);
-                model.addAttribute("customers", customerService.getAllCustomers());
-                model.addAttribute("employees", employeeService.getAllEmployees());
-                model.addAttribute("error", error);
-                return "admin/addTask";
-            }
-            return "redirect:/admin/tasks";
+        } else {
+            task = new Tasks();
         }
-        return "redirect:/";
+        model.addAttribute("task", task);
+        model.addAttribute("customers", customerService.getAllCustomers());
+        model.addAttribute("employees", employeeService.getAllEmployees());
+        return "admin/addTask";
     }
 
     @GetMapping("tasks/delete/{id}")
     public String deleteTask(@PathVariable Long id, Model model) {
-        if (isValidLogin()) {
-            String error = taskService.deleteTask(id);
-            if (error != null) {
-                model.addAttribute("deleteError", error);
-                return showEmployees(model);
-            }
-            return "redirect:/admin/tasks";
+        String error = taskService.deleteTask(id);
+        if (error != null) {
+            log.error("Error deleting task {}: {}", id, error);
+            model.addAttribute("deleteError", error);
+            model.addAttribute("tasks", taskService.getAllTasks());
+            model.addAttribute("activePage", "tasks");
+            return "admin/tasks";
         }
-        return "redirect:/";
+        // Consider adding a success flash attribute
+        return "redirect:/admin/tasks";
     }
-
 
     @GetMapping("employees")
     public String showEmployees(Model model) {
-        if (isValidLogin()) {
-            model.addAttribute("employees", employeeService.getAllEmployees());
-            return "admin/employees";
-        }
-        return "redirect:/";
+        model.addAttribute("activePage", "employees");
+        model.addAttribute("employees", employeeService.getAllEmployees());
+        return "admin/employees";
     }
 
     @GetMapping({"employees/add", "employees/update/{id}"})
-    public String addEmployee(@PathVariable(required = false) Long id, Model model) {
-        if (isValidLogin()) {
-            Employee employee = (id != null) ? employeeService.getEmployeeById(id) : new Employee();
-            model.addAttribute("employee", employee);
-            return "admin/addEmployee";
+    public String showAddEmployeeForm(@PathVariable(required = false) Long id, Model model) {
+        model.addAttribute("activePage", "employees");
+        Employee employee;
+        if (id != null) {
+            employee = employeeService.getEmployeeById(id);
+            if (employee == null) {
+                log.warn("Employee with id {} not found for update, showing add form.", id);
+                employee = new Employee();
+            }
+        } else {
+            employee = new Employee();
         }
-        return "redirect:/";
+        model.addAttribute("employee", employee);
+        return "admin/addEmployee";
     }
 
-    @PostMapping({"employees/add", "employees/update/{id}"})
-    public String addEmployee(@PathVariable(required = false) Long id, Employee employee, Model model) {
-        if (isValidLogin()) {
-            String error = null;
-            if (id != null) {
-                error = employeeService.updateEmployee(employee, id);
-            } else {
-                error = employeeService.createEmployee(employee);
-            }
-            if (error != null) {
-                model.addAttribute("employee", employee);
-                model.addAttribute("error", error);
-                return "admin/addEmployee";
-            }
-            return "redirect:/admin/employees";
-        }
-        return "redirect:/";
-    }
 
     @GetMapping("employees/delete/{id}")
     public String deleteEmployee(@PathVariable Long id, Model model) {
-        if (isValidLogin()) {
-            String error = employeeService.deleteEmployee(id);
-            if (error != null) {
-                model.addAttribute("deleteError", error);
-                return showEmployees(model);
-            }
-            return "redirect:/admin/employees";
+        String error = employeeService.deleteEmployee(id);
+        if (error != null) {
+            log.error("Error deleting employee {}: {}", id, error);
+            model.addAttribute("deleteError", error);
+            model.addAttribute("employees", employeeService.getAllEmployees());
+            model.addAttribute("activePage", "employees");
+            return "admin/employees";
         }
-        return "redirect:/";
+        return "redirect:/admin/employees";
     }
 
     @GetMapping("/customers")
     public String showCustomers(Model model) {
-        if (isValidLogin()) {
-            model.addAttribute("customers", customerService.getAllCustomers());
-            return "admin/customers";
-        }
-        return "redirect:/";
+        model.addAttribute("activePage", "customers");
+        model.addAttribute("customers", customerService.getAllCustomers());
+        return "admin/customers";
     }
 
     @GetMapping({"customers/add", "customers/update/{id}"})
-    public String addCustomer(@PathVariable(required = false) Long id, Model model) {
-        if (isValidLogin()) {
-            Customer customer = (id != null) ? customerService.getCustomerById(id) : new Customer();
-            model.addAttribute("customer", customer);
-            return "admin/addCustomer";
-        }
-        return "redirect:/";
-    }
-
-    @PostMapping({"customers/add", "customers/update/{id}"})
-    public String addCustomer(@PathVariable(required = false) Long id, Customer customer, Model model) {
-        if (isValidLogin()) {
-            String error = null;
-            if (id != null) {
-                error = customerService.updateCustomer(customer, id);
-            } else {
-                error = customerService.createCustomer(customer);
+    public String showAddCustomerForm(@PathVariable(required = false) Long id, Model model) {
+        model.addAttribute("activePage", "customers");
+        Customer customer;
+        if (id != null) {
+            customer = customerService.getCustomerById(id);
+            if (customer == null) {
+                log.warn("Customer with id {} not found for update, showing add form.", id);
+                customer = new Customer();
             }
-            if (error != null) {
-                model.addAttribute("customer", customer);
-                model.addAttribute("error", error);
-                return "admin/addCustomer";
-            }
-            return "redirect:/admin/customers";
+        } else {
+            customer = new Customer();
         }
-        return "redirect:/";
+        model.addAttribute("customer", customer);
+        return "admin/addCustomer";
     }
 
     @GetMapping("customers/delete/{id}")
     public String deleteCustomer(@PathVariable Long id, Model model) {
-        if (isValidLogin()) {
-            String error = customerService.deleteCustomer(id);
-            if (error != null) {
-                model.addAttribute("deleteError", error);
-                return showEmployees(model);
-            }
-            return "redirect:/admin/employees";
+        String error = customerService.deleteCustomer(id);
+        if (error != null) {
+            log.error("Error deleting customer {}: {}", id, error);
+            model.addAttribute("deleteError", error);
+            model.addAttribute("customers", customerService.getAllCustomers());
+            model.addAttribute("activePage", "customers");
+            return "admin/customers";
         }
-        return "redirect:/";
+        return "redirect:/admin/customers";
     }
 
     @GetMapping("/follow-up")
     public String showFollowUp(Model model) {
-        if (isValidLogin()) {
-            return "admin/followup";
+        model.addAttribute("activePage", "followup");
+        return "admin/followup";
+    }
+
+    // === POST Mappings ===
+
+    @PostMapping({"tasks/add", "tasks/update/{id}"})
+    public String saveOrUpdateTask(@PathVariable(required = false) Long id,
+                                   @Valid @ModelAttribute("task") Tasks task,
+                                   BindingResult bindingResult,
+                                   Model model) {
+
+        log.info("Attempting to save/update task. Received task object: {}", task);
+
+        // Explicitly fetch related entities
+        Customer customer = null;
+        // Check if the nested customer object and its ID are present before attempting to fetch
+        if (task.getCustomer() != null && task.getCustomer().getId() != null) {
+            log.info("Fetching customer with ID: {}", task.getCustomer().getId());
+            customer = customerService.getCustomerById(task.getCustomer().getId());
+            log.info("Fetched customer: {}", customer);
+            task.setCustomer(customer);
+        } else if (task.getCustomer() != null && task.getCustomer().getId() == null) {
+            // If customer object exists but ID is null (e.g., empty selection), ensure task's customer is null
+            task.setCustomer(null);
+            log.warn("Task submitted with customer object but null ID.");
+            // Let validation handle required field if applicable
+        } else {
+            // If task.getCustomer() was null initially
+            task.setCustomer(null);
         }
-        return "redirect:/";
+
+
+        Employee employee = null;
+        if (task.getEmployee() != null && task.getEmployee().getId() != null) {
+            log.info("Fetching employee with ID: {}", task.getEmployee().getId());
+            employee = employeeService.getEmployeeById(task.getEmployee().getId());
+            log.info("Fetched employee: {}", employee);
+            task.setEmployee(employee);
+        } else if (task.getEmployee() != null && task.getEmployee().getId() == null) {
+            task.setEmployee(null);
+            log.warn("Task submitted with employee object but null ID.");
+        } else {
+            task.setEmployee(null);
+        }
+
+        // Re-check validation or add specific errors if lookups failed but were expected
+        boolean lookupError = false;
+        if (customer == null && task.getCustomer() != null && task.getCustomer().getId() != null) {
+            log.warn("Customer lookup failed for ID: {}", task.getCustomer().getId());
+            bindingResult.rejectValue("customer", "error.task", "Selected Customer not found or invalid.");
+            lookupError = true;
+        }
+        if (employee == null && task.getEmployee() != null && task.getEmployee().getId() != null) {
+            log.warn("Employee lookup failed for ID: {}", task.getEmployee().getId());
+            bindingResult.rejectValue("employee", "error.task", "Selected Employee not found or invalid.");
+            lookupError = true;
+        }
+
+        // Check binding errors (including any added from failed lookups)
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("activePage", "tasks");
+            log.warn("Validation errors (or missing related entity) found for Task form BEFORE service call!");
+            model.addAttribute("customers", customerService.getAllCustomers());
+            model.addAttribute("employees", employeeService.getAllEmployees());
+            return "admin/addTask";
+        }
+
+        // --- Proceed with saving/updating ---
+        String error = null;
+        try {
+            log.info("Calling service to save/update task: {}", task);
+            if (id != null) {
+                task.setId(id);
+                error = taskService.updateTask(task, id);
+            } else {
+                error = taskService.createTask(task);
+            }
+            log.info("Service call finished. Returned error message: '{}'", error);
+        } catch (Exception e) {
+            log.error("Exception during saving/updating task (id={}): {}", id, e.getMessage(), e);
+            error = "An unexpected system error occurred while saving the task.";
+        }
+
+        // --- Handle Result ---
+        if (error != null) {
+            log.error("Persistence error detected after service call: {}", error);
+            model.addAttribute("activePage", "tasks");
+            model.addAttribute("customers", customerService.getAllCustomers());
+            model.addAttribute("employees", employeeService.getAllEmployees());
+            model.addAttribute("persistenceError", error);
+            return "admin/addTask";
+        }
+
+        log.info("Task {} successfully. Redirecting...", (id == null ? "created" : "updated"));
+        return "redirect:/admin/tasks";
     }
 
-    public boolean isValidLogin() {
-        return HomeController.admin != null;
+    @PostMapping({"employees/add", "employees/update/{id}"})
+    public String saveOrUpdateEmployee(@PathVariable(required = false) Long id,
+                                       @Validated(OnCreate.class) // Keep @Validated logic
+                                       @ModelAttribute("employee") Employee employee,
+                                       BindingResult bindingResult,
+                                       Model model) {
+
+        log.info("Attempting to save/update employee: {}", employee);
+
+        // --- Validation Check ---
+        boolean isUpdate = (id != null);
+        if (isUpdate && bindingResult.hasFieldErrors("password") && bindingResult.getErrorCount() == bindingResult.getFieldErrorCount("password")) {
+            log.warn("Ignoring password validation errors during employee update for id={}", id);
+            // Proceed even with only password errors on update
+        } else if (bindingResult.hasErrors()) {
+            model.addAttribute("activePage", "employees");
+            log.warn("Validation errors found for Employee form BEFORE service call! isUpdate={}, Errors: {}", isUpdate, bindingResult.getAllErrors());
+            return "admin/addEmployee";
+        }
+
+        // --- Service Call ---
+        String error = null;
+        try {
+            log.info("Calling service to save/update employee: {}", employee);
+            if (isUpdate) {
+                employee.setId(id);
+                error = employeeService.updateEmployee(employee, id);
+            } else {
+                error = employeeService.createEmployee(employee);
+            }
+            log.info("Service call finished. Returned error message: '{}'", error);
+
+            // <<< CHANGE: Refine Catch Block >>>
+        } catch (DataIntegrityViolationException e) {
+            log.error("Data integrity violation during saving/updating employee (id={}): {}", id, e.getMessage());
+            // Check if the violation is due to the unique email constraint
+            // NOTE: The actual constraint name ('employee.UK...') might differ in your DB schema.
+            // You might need to check your DB or trigger the error once to find the exact name.
+            if (e.getMessage() != null && e.getMessage().contains("employee.UK")) { // Common pattern for unique key names
+                error = "Email address already exists. Please use a different email.";
+            } else {
+                error = "A database constraint was violated. Please check your input.";
+            }
+        } catch (DataAccessException e) { // Catch other Spring DAO exceptions
+            log.error("DataAccessException during saving/updating employee (id={}): {}", id, e.getMessage(), e);
+            error = "A database error occurred while saving the employee.";
+        } catch (Exception e) { // Catch any other unexpected exceptions
+            log.error("Unexpected exception during saving/updating employee (id={}): {}", id, e.getMessage(), e);
+            error = "An unexpected system error occurred while saving the employee.";
+        }
+
+        // --- Handle Result ---
+        if (error != null) {
+            log.error("Persistence error detected after service call: {}", error);
+            model.addAttribute("activePage", "employees");
+            model.addAttribute("persistenceError", error); // Use the specific or generic error message
+            return "admin/addEmployee";
+        }
+
+        log.info("Employee {} successfully. Redirecting...", (id == null ? "created" : "updated"));
+        return "redirect:/admin/employees";
     }
 
-//    public static List<Employee> getDummyEmployees() {
-//        return Arrays.asList(
-//                Employee.builder()
-//                        .name("John Doe")
-//                        .role("Doctor")
-//                        .email("johndoe@example.com")
-//                        .password("securePass123")
-//                        .build(),
-//
-//                Employee.builder()
-//                        .name("Jane Smith")
-//                        .role("Nurse")
-//                        .email("janesmith@example.com")
-//                        .password("nursePass456")
-//                        .build(),
-//
-//                Employee.builder()
-//                        .name("Robert Brown")
-//                        .role("Assistant")
-//                        .email("robertbrown@example.com")
-//                        .password("adminSecure789")
-//                        .build(),
-//
-//                Employee.builder()
-//                        .name("Emily Davis")
-//                        .role("Receptionist")
-//                        .email("emilydavis@example.com")
-//                        .password("receptionPass")
-//                        .build()
-//        );
-//    }
+    @PostMapping({"customers/add", "customers/update/{id}"})
+    public String saveOrUpdateCustomer(@PathVariable(required = false) Long id,
+                                       @Valid @ModelAttribute("customer") Customer customer,
+                                       BindingResult bindingResult,
+                                       Model model) {
 
-//    public static List<Customer> getDummyCustomers() {
-//        return Arrays.asList(
-//                Customer.builder()
-//                        .name("Alice Johnson")
-//                        .age(34)
-//                        .gender("Female")
-//                        .email("alice.johnson@example.com")
-//                        .medicalHistory("Diabetes, Hypertension")
-//                        .contactDetails("+1-555-1234")
-//                        .insurance(
-//                                Insurance.builder()
-//                                        .provider("BlueCross")
-//                                        .policyNumber("BC123456")
-//                                        .coverageDetails("Full coverage including dental and vision")
-//                                        .expiryDate(new Date(System.currentTimeMillis() + 31556952000L)) // 1 year from now
-//                                        .build()
-//                        )
-//                        .build(),
-//
-//                Customer.builder()
-//                        .name("Mark Evans")
-//                        .age(45)
-//                        .gender("Male")
-//                        .email("mark.evans@example.com")
-//                        .medicalHistory("Asthma")
-//                        .contactDetails("+1-555-5678")
-//                        .insurance(
-//                                Insurance.builder()
-//                                        .provider("UnitedHealth")
-//                                        .policyNumber("UH987654")
-//                                        .coverageDetails("Basic health coverage, no dental")
-//                                        .expiryDate(new Date(System.currentTimeMillis() + 63072000000L)) // 2 years from now
-//                                        .build()
-//                        )
-//                        .build(),
-//
-//                Customer.builder()
-//                        .name("Sophia Martinez")
-//                        .age(29)
-//                        .gender("Female")
-//                        .email("sophia.martinez@example.com")
-//                        .medicalHistory("No known conditions")
-//                        .contactDetails("+1-555-8765")
-//                        .insurance(
-//                                Insurance.builder()
-//                                        .provider("Aetna")
-//                                        .policyNumber("AET654321")
-//                                        .coverageDetails("Comprehensive health and dental")
-//                                        .expiryDate(new Date(System.currentTimeMillis() + 94608000000L)) // 3 years from now
-//                                        .build()
-//                        )
-//                        .build()
-//        );
-//    }
+        log.info("Attempting to save/update customer: {}", customer);
 
-//    public static List<Tasks> getDummyTasks(List<Customer> customers, List<Employee> employees) {
-//        return Arrays.asList(
-//                Tasks.builder()
-//                        .taskName("Schedule Follow-up Appointment")
-//                        .customer(customers.get(0)) // Assuming customers list has at least one entry
-//                        .employee(employees.get(0)) // Assuming employees list has at least one entry
-//                        .dueDate(LocalDateTime.now().plusDays(7))
-//                        .priority("High")
-//                        .description("Follow-up checkup for diabetes management")
-//                        .status("Pending")
-//                        .build(),
-//
-//                Tasks.builder()
-//                        .taskName("Update Medical Records")
-//                        .customer(customers.get(1))
-//                        .employee(employees.get(1))
-//                        .dueDate(LocalDateTime.now().plusDays(3))
-//                        .priority("Medium")
-//                        .description("Update latest test results in patient records")
-//                        .status("In Progress")
-//                        .build(),
-//
-//                Tasks.builder()
-//                        .taskName("Insurance Verification")
-//                        .customer(customers.get(2))
-//                        .employee(employees.get(2))
-//                        .dueDate(LocalDateTime.now().plusDays(5))
-//                        .priority("Low")
-//                        .description("Verify insurance details for upcoming surgery")
-//                        .status("Completed")
-//                        .build()
-//        );
-//    }
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("activePage", "customers");
+            log.warn("Validation errors found for Customer form BEFORE service call!");
+            return "admin/addCustomer";
+        }
 
+        String error = null;
+        try {
+            log.info("Calling service to save/update customer: {}", customer);
+            if (id != null) {
+                customer.setId(id);
+                error = customerService.updateCustomer(customer, id);
+            } else {
+                error = customerService.createCustomer(customer);
+            }
+            log.info("Customer service call finished. Returned error message: '{}'", error);
+
+            // <<< CHANGE: Refine Catch Block >>>
+        } catch (DataIntegrityViolationException e) {
+            log.error("Data integrity violation during saving/updating customer (id={}): {}", id, e.getMessage());
+            // Check if the violation is due to the unique email constraint identified in your logs
+            if (e.getMessage() != null && e.getMessage().contains("customer.UKdwk6cx0afu8bs9o4t536v1j5v")) { // Use exact constraint name from your log
+                error = "Email address already exists. Please use a different email.";
+            } else {
+                // Handle other potential integrity violations if necessary
+                error = "A database constraint was violated. Please check your input.";
+            }
+        } catch (DataAccessException e) { // Catch other database access issues
+            log.error("DataAccessException during saving/updating customer (id={}): {}", id, e.getMessage(), e);
+            error = "A database error occurred while saving the customer.";
+        } catch (Exception e) { // Catch any other unexpected exceptions
+            log.error("Unexpected exception during saving/updating customer (id={}): {}", id, e.getMessage(), e);
+            error = "An unexpected system error occurred while saving the customer.";
+        }
+
+        // --- Handle Result ---
+        if (error != null) {
+            log.error("Persistence error detected after customer service call: {}", error);
+            model.addAttribute("activePage", "customers");
+            model.addAttribute("persistenceError", error); // Use the specific or generic error message
+            return "admin/addCustomer";
+        }
+
+        log.info("Customer {} successfully. Redirecting...", (id == null ? "created" : "updated"));
+        return "redirect:/admin/customers";
+    }
 }

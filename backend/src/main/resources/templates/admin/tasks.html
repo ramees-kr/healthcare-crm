@@ -4,40 +4,79 @@
       layout:decorate="~{/admin/layout}">
 <head>
     <title>Tasks Management</title>
+    <style>
+        /* Minor adjustments if needed */
+        .action-buttons a, .action-buttons form {
+            margin-right: 5px; /* Space between buttons */
+            display: inline-block; /* Keep buttons on same line */
+        }
+        .action-buttons .btn-danger {
+            /* Optional: Add specific styling for delete button */
+        }
+    </style>
 </head>
 <body>
+
+<th:block layout:fragment="page-title">Tasks Management</th:block>
+
 <div layout:fragment="content">
-    <h2 class="h2">Tasks Management</h2>
+    <a th:href="@{/admin/tasks/add}" class="btn btn-primary mb-3">
+        <i class="bi bi-plus-circle-fill"></i> Add Task
+    </a>
+
+    <div th:if="${deleteError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> Error: <span th:text="${deleteError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <div class="table-responsive">
-        <a th:href="@{/admin/tasks/add}" class="btn btn-sm btn-primary">Add Task</a>
-        <table class="table table-striped table-sm">
-            <thead>
-            <tr>
-                <th>Task Name</th>
-                <th>Customer</th>
-                <th>Employee</th>
-                <th>Due Date</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
+        <table class="table table-striped table-hover table-sm caption-top">
+            <caption>List of all tasks</caption>
+            <thead class="table-light"> <tr>
+                <th scope="col">Task Name</th>
+                <th scope="col">Customer</th>
+                <th scope="col">Assigned Employee</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="text-center">Actions</th> </tr>
             </thead>
             <tbody>
+            <tr th:if="${#lists.isEmpty(tasks)}">
+                <td colspan="7" class="text-center text-muted">No tasks found.</td>
+            </tr>
             <tr th:each="task : ${tasks}">
-                <td th:text="${task.taskName}"></td>
-                <td th:text="${task.customer.name}"></td>
-                <td th:text="${task.employee.name}"></td>
-                <td th:text="${#temporals.format(task.dueDate, 'dd/MM/yyyy HH:mm')}"></td>
-                <td th:text="${task.priority}"></td>
-                <td th:text="${task.status}"></td>
+                <td th:text="${task.taskName}">Task Name Placeholder</td>
+                <td th:text="${task.customer?.name ?: 'N/A'}">Customer Name Placeholder</td>
+                <td th:text="${task.employee?.name ?: 'N/A'}">Employee Name Placeholder</td>
+                <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'yyyy-MM-dd HH:mm') : 'N/A'}">Due Date Placeholder</td>
+                <td th:text="${task.priority}">Priority Placeholder</td>
                 <td>
-                    <a th:href="@{/admin/tasks/update/{id}(id=${task.id})}" class="btn btn-sm btn-primary">Edit</a>
-                    <a th:href="@{/admin/tasks/delete/{id}(id=${task.id})}" th:onclick="return confirm('Are you sure you want to delete this task?')" class="btn btn-sm btn-danger">Delete</a>
+                     <span th:switch="${task.status}" class="badge"
+                           th:classappend="${task.status == 'Pending' ? 'bg-warning text-dark' : (task.status == 'In Progress' ? 'bg-info text-dark' : (task.status == 'Completed' ? 'bg-success' : 'bg-secondary'))}">
+                         <span th:text="${task.status}">Status Placeholder</span>
+                     </span>
+                </td>
+                <td class="text-center action-buttons"> <a th:href="@{/admin/tasks/update/{id}(id=${task.id})}" class="btn btn-sm btn-outline-primary" title="Edit Task">
+                    <i class="bi bi-pencil-fill"></i> Edit
+                </a>
+
+                    <a th:href="@{/admin/tasks/delete/{id}(id=${task.id})}"
+                       th:data-task-name="${task.taskName}" onclick="return confirmDelete(this);" class="btn btn-sm btn-outline-danger" title="Delete Task">
+                        <i class="bi bi-trash-fill"></i> Delete
+                    </a>
                 </td>
             </tr>
             </tbody>
         </table>
-    </div>
-</div>
-</body>
+    </div> <script>
+    function confirmDelete(link) {
+        const taskName = link.getAttribute('data-task-name');
+        // Escape taskName for display in confirm dialog (basic escaping)
+        const escapedTaskName = taskName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        return confirm('Are you sure you want to delete task: ' + escapedTaskName + '?');
+    }
+</script>
+
+</div> </body>
 </html>

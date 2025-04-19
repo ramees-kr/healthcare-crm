@@ -3,52 +3,85 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{/admin/layout}">
 <head>
-    <title>Customer and Insurance Management</title>
+    <title>Customer Management</title>
+    <style>
+        /* Minor adjustments if needed */
+        .action-buttons a {
+            margin-right: 5px; /* Space between buttons */
+        }
+        /* Ensure long text wraps or truncates if needed */
+        /* td { word-break: break-word; } */
+    </style>
 </head>
 <body>
+
+<th:block layout:fragment="page-title">Customer Management</th:block>
+
 <div layout:fragment="content">
-    <h2 class="h2">Customer and Insurance Management</h2>
+
+    <a th:href="@{/admin/customers/add}" class="btn btn-primary mb-3">
+        <i class="bi bi-person-plus-fill"></i> Add Customer
+    </a>
+
+    <div th:if="${deleteError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> Error: <span th:text="${deleteError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <div class="table-responsive">
-        <a th:href="@{/admin/customers/add}" class="btn btn-sm btn-primary">Add Customer</a>
-        <table class="table table-striped table-sm">
-            <thead>
+        <table class="table table-striped table-hover table-sm caption-top">
+            <caption>List of all customers and their insurance details</caption>
+            <thead class="table-light">
             <tr>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Email</th>
-                <th>Medical History</th>
-                <th>Contact Details</th>
-                <th>Insurance Provider</th>
-                <th>Policy Number</th>
-                <th>Coverage Details</th>
-                <th>Expiry Date</th>
-                <th>Actions</th>
+                <th scope="col">Name</th>
+                <th scope="col">Age</th>
+                <th scope="col">Gender</th>
+                <th scope="col">Email</th>
+                <th scope="col">Medical History</th>
+                <th scope="col">Contact</th>
+                <th scope="col">Insurance Provider</th>
+                <th scope="col">Policy #</th>
+                <th scope="col">Insurance Expiry</th>
+                <th scope="col" class="text-center">Actions</th>
             </tr>
             </thead>
             <tbody>
+            <tr th:if="${#lists.isEmpty(customers)}">
+                <td colspan="9" class="text-center text-muted">No customers found.</td>
+            </tr>
             <tr th:each="customer : ${customers}">
                 <td th:text="${customer.name}"></td>
                 <td th:text="${customer.age}"></td>
                 <td th:text="${customer.gender}"></td>
                 <td th:text="${customer.email}"></td>
-                <td th:text="${customer.medicalHistory}"></td>
+                <td th:text="${#strings.abbreviate(customer.medicalHistory, 50)}" th:title="${customer.medicalHistory}"></td>
                 <td th:text="${customer.contactDetails}"></td>
-                <td th:text="${customer.insurance.provider}"></td>
-                <td th:text="${customer.insurance.policyNumber}"></td>
-                <td th:text="${customer.insurance.coverageDetails}"></td>
-                <td th:text="${#temporals.format(customer.insurance.expiryDate, 'dd/MM/yyyy')}"></td>
-                <td>
+                <td th:text="${customer.insurance?.provider ?: 'N/A'}"></td>
+                <td th:text="${customer.insurance?.policyNumber ?: 'N/A'}"></td>
+                <td th:text="${customer.insurance?.expiryDate != null ? #temporals.format(customer.insurance.expiryDate, 'yyyy-MM-dd') : 'N/A'}"></td>
+                <td class="text-center action-buttons">
                     <a th:href="@{/admin/customers/update/{id}(id=${customer.id})}"
-                       class="btn btn-sm btn-primary">Edit</a>
+                       class="btn btn-sm btn-outline-primary" title="Edit Customer">
+                        <i class="bi bi-pencil-fill"></i> Edit
+                    </a>
                     <a th:href="@{/admin/customers/delete/{id}(id=${customer.id})}"
-                       th:onclick="return confirm('Are you sure you want to delete this employee?')"
-                       class="btn btn-sm btn-danger">Delete</a>
+                       th:data-customer-name="${customer.name}"
+                       onclick="return confirmCustomerDelete(this);"
+                       class="btn btn-sm btn-outline-danger" title="Delete Customer">
+                        <i class="bi bi-trash-fill"></i> Delete
+                    </a>
                 </td>
             </tr>
             </tbody>
         </table>
-    </div>
-</div>
-</body>
+    </div> <script>
+    function confirmCustomerDelete(link) {
+        const customerName = link.getAttribute('data-customer-name');
+        // Basic escaping for confirm dialog
+        const escapedCustomerName = customerName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        return confirm('Are you sure you want to delete customer: ' + escapedCustomerName + '?');
+    }
+</script>
+
+</div> </body>
 </html>

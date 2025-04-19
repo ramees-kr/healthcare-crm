@@ -1,80 +1,107 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/admin/layout}">
 <head>
-    <title>Customer Form</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <title th:text="${customer != null and customer.id != null ? 'Edit Customer' : 'Add Customer'}">Customer Form</title>
 </head>
 <body>
-<div class="container mt-5">
-    <h2 th:text="${customer.id} != null ? 'Edit Customer' : 'Add Customer'"></h2>
-    <div class="card">
-        <div class="card-body">
-            <form th:action="${customer.id} != null ? '/admin/customers/update/' + ${customer.id} : '/admin/customers/add'"
-                  th:object="${customer}"
-                  method="post">
 
-                <!-- Hidden Field for ID -->
-                <input type="hidden" th:field="*{id}">
+<th:block layout:fragment="page-title" th:text="${customer != null and customer.id != null ? 'Edit Customer' : 'Add Customer'}"></th:block>
 
-                <div class="mb-3">
-                    <label class="form-label">Name:</label>
-                    <input type="text" class="form-control" th:field="*{name}" required>
-                </div>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-10 col-lg-8"> <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0" th:text="${customer != null and customer.id != null ? 'Customer Details' : 'New Customer Details'}">Customer Details</h5>
+            </div>
+            <div class="card-body">
 
-                <div class="mb-3">
-                    <label class="form-label">Age:</label>
-                    <input type="number" class="form-control" th:field="*{age}" required>
+                <div th:if="${persistenceError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Error: <span th:text="${persistenceError}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Gender:</label>
-                    <select class="form-control" th:field="*{gender}" required>
-                        <option value="">Select</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </select>
+                <form th:object="${customer}"
+                      th:action="${customer.id == null} ? @{/admin/customers/add} : @{/admin/customers/update/{id}(id=${customer.id})}"
+                      method="post"
+                      novalidate>
+
+                    <input type="hidden" th:field="*{id}">
+
+                    <h6 class="mt-2 mb-3 text-primary">Customer Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Name:</label>
+                            <input type="text" id="name" class="form-control" th:field="*{name}" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name Error</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="age" class="form-label">Age:</label>
+                            <input type="number" id="age" class="form-control" th:field="*{age}" th:classappend="${#fields.hasErrors('age')} ? 'is-invalid' : ''" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('age')}" th:errors="*{age}">Age Error</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="gender" class="form-label">Gender:</label>
+                            <select id="gender" class="form-select" th:field="*{gender}" th:classappend="${#fields.hasErrors('gender')} ? 'is-invalid' : ''" required>
+                                <option value="">-- Select --</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}">Gender Error</div>
+                        </div>
+                    </div><div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email:</label>
+                        <input type="email" id="email" class="form-control" th:field="*{email}" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email Error</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="contactDetails" class="form-label">Contact Details:</label>
+                        <input type="text" id="contactDetails" class="form-control" th:field="*{contactDetails}" th:classappend="${#fields.hasErrors('contactDetails')} ? 'is-invalid' : ''" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('contactDetails')}" th:errors="*{contactDetails}">Contact Details Error</div>
+                    </div>
+                </div><div class="mb-3">
+                    <label for="medicalHistory" class="form-label">Medical History:</label>
+                    <textarea id="medicalHistory" class="form-control" rows="3" th:field="*{medicalHistory}" th:classappend="${#fields.hasErrors('medicalHistory')} ? 'is-invalid' : ''" required></textarea>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('medicalHistory')}" th:errors="*{medicalHistory}">Medical History Error</div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Email:</label>
-                    <input type="email" class="form-control" th:field="*{email}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Medical History:</label>
-                    <textarea class="form-control" th:field="*{medicalHistory}" required></textarea>
-                </div>
+                    <hr> <h6 class="mb-3 text-primary">Insurance Information</h6>
 
-                <div class="mb-3">
-                    <label class="form-label">Contact Details:</label>
-                    <input type="text" class="form-control" th:field="*{contactDetails}" required>
-                </div>
+                    <input type="hidden" th:field="*{insurance.id}">
 
-                <h3>Insurance Details</h3>
-                <input type="hidden" th:field="*{insurance.id}">
-                <div class="mb-3">
-                    <label class="form-label">Provider:</label>
-                    <input type="text" class="form-control" th:field="*{insurance.provider}" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="insuranceProvider" class="form-label">Provider:</label>
+                            <input type="text" id="insuranceProvider" class="form-control" th:field="*{insurance.provider}" th:classappend="${#fields.hasErrors('insurance.provider')} ? 'is-invalid' : ''" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('insurance.provider')}" th:errors="*{insurance.provider}">Provider Error</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="insurancePolicyNumber" class="form-label">Policy Number:</label>
+                            <input type="text" id="insurancePolicyNumber" class="form-control" th:field="*{insurance.policyNumber}" th:classappend="${#fields.hasErrors('insurance.policyNumber')} ? 'is-invalid' : ''" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('insurance.policyNumber')}" th:errors="*{insurance.policyNumber}">Policy Number Error</div>
+                        </div>
+                    </div><div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="insuranceCoverageDetails" class="form-label">Coverage Details:</label>
+                        <textarea id="insuranceCoverageDetails" class="form-control" rows="3" th:field="*{insurance.coverageDetails}" th:classappend="${#fields.hasErrors('insurance.coverageDetails')} ? 'is-invalid' : ''" required></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('insurance.coverageDetails')}" th:errors="*{insurance.coverageDetails}">Coverage Details Error</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="insuranceExpiryDate" class="form-label">Expiry Date:</label>
+                        <input type="datetime-local" id="insuranceExpiryDate" class="form-control" th:field="*{insurance.expiryDate}" th:classappend="${#fields.hasErrors('insurance.expiryDate')} ? 'is-invalid' : ''" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('insurance.expiryDate')}" th:errors="*{insurance.expiryDate}">Expiry Date Error</div>
+                    </div>
+                </div><div class="mt-4">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle-fill"></i> Save Customer
+                    </button>
+                    <a th:href="@{/admin/customers}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Policy Number:</label>
-                    <input type="text" class="form-control" th:field="*{insurance.policyNumber}" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Coverage Details:</label>
-                    <textarea class="form-control" th:field="*{insurance.coverageDetails}" required></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Expiry Date:</label>
-                    <input type="datetime-local" class="form-control" th:field="*{insurance.expiryDate}" required>
-                </div>
-
-                <span style="color: red;" th:text="${error}"></span>
-                <button type="submit" class="btn btn-success">Save</button>
-                <a th:href="@{/admin/customers}" class="btn btn-secondary">Cancel</a>
-            </form>
-        </div>
-    </div>
-</div>
-</body>
+                </form>
+            </div> </div> </div> </div> </div> </body>
 </html>
