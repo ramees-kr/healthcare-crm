@@ -5,12 +5,13 @@
 <head>
     <title>Customer Management</title>
     <style>
-        /* Minor adjustments if needed */
         .action-buttons a {
             margin-right: 5px; /* Space between buttons */
         }
-        /* Ensure long text wraps or truncates if needed */
-        /* td { word-break: break-word; } */
+        .action-buttons {
+            white-space: nowrap;
+        }
+
     </style>
 </head>
 <body>
@@ -42,13 +43,12 @@
                 <th scope="col">Insurance Provider</th>
                 <th scope="col">Policy #</th>
                 <th scope="col">Insurance Expiry</th>
-                <th scope="col" class="text-center">Actions</th>
+                <th scope="col" class="text-center" style="min-width: 120px;">Actions</th>
             </tr>
             </thead>
             <tbody>
             <tr th:if="${#lists.isEmpty(customers)}">
-                <td colspan="9" class="text-center text-muted">No customers found.</td>
-            </tr>
+                <td colspan="10" class="text-center text-muted">No customers found.</td> </tr>
             <tr th:each="customer : ${customers}">
                 <td th:text="${customer.name}"></td>
                 <td th:text="${customer.age}"></td>
@@ -74,14 +74,18 @@
             </tr>
             </tbody>
         </table>
-    </div> <script>
-    function confirmCustomerDelete(link) {
-        const customerName = link.getAttribute('data-customer-name');
-        // Basic escaping for confirm dialog
-        const escapedCustomerName = customerName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        return confirm('Are you sure you want to delete customer: ' + escapedCustomerName + '?');
-    }
-</script>
+    </div>
 
-</div> </body>
+    <script>
+        function confirmCustomerDelete(link) {
+            const customerName = link.getAttribute('data-customer-name');
+            // Basic escaping for confirm dialog
+            const escapedCustomerName = customerName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            return confirm('Are you sure you want to delete customer: ' + escapedCustomerName + '?');
+        }
+    </script>
+
+</div>
+
+</body>
 </html>
