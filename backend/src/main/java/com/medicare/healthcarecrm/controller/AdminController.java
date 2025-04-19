@@ -8,25 +8,35 @@ import com.medicare.healthcarecrm.model.Tasks;
 import com.medicare.healthcarecrm.service.CustomerService;
 import com.medicare.healthcarecrm.service.EmployeeService;
 import com.medicare.healthcarecrm.service.TaskService;
+
+import jakarta.validation.Valid; // <<< Import @Valid
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult; // <<< Import BindingResult
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute; // <<< Import ModelAttribute
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.validation.FieldError;
+
 
 @RequestMapping("/admin")
 @Controller
 public class AdminController {
 
+    // Add Logger
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
+
+    // Keep Autowired fields and Constructor Injection as before
     private final TaskService taskService;
     private final EmployeeService employeeService;
     private final CustomerService customerService;
 
-    // Keep Constructor Injection
-    public AdminController(/*AdminService adminService,*/ TaskService taskService, EmployeeService employeeService, CustomerService customerService) {
-        // this.adminService = adminService; // Keep if adminService is needed
+    public AdminController(TaskService taskService, EmployeeService employeeService, CustomerService customerService) {
         this.taskService = taskService;
         this.employeeService = employeeService;
         this.customerService = customerService;
@@ -34,41 +44,27 @@ public class AdminController {
 
     @GetMapping
     public String home(Model model) {
+        // Placeholder for Step 8 - Populate Admin Dashboard
+        // Example: Add counts
+        // model.addAttribute("customerCount", customerService.getCustomerCount());
+        // model.addAttribute("employeeCount", employeeService.getEmployeeCount());
+        // model.addAttribute("pendingTaskCount", taskService.getPendingTaskCount());
         return "admin/admin";
     }
 
     @GetMapping("/tasks")
     public String showTasks(Model model) {
-        // REMOVED: if (isValidLogin()) { ... } check
         model.addAttribute("tasks", taskService.getAllTasks());
         return "admin/tasks";
     }
 
     @GetMapping({"tasks/add", "tasks/update/{id}"})
-    public String addTask(@PathVariable(required = false) Long id, Model model) {
-        Tasks tasks = (id != null) ? taskService.getTaskById(id) : new Tasks();
-        model.addAttribute("task", tasks);
-        model.addAttribute("customers", customerService.getAllCustomers());
-        model.addAttribute("employees", employeeService.getAllEmployees());
+    public String showAddTaskForm(@PathVariable(required = false) Long id, Model model) { // Renamed for clarity
+        Tasks task = (id != null) ? taskService.getTaskById(id) : new Tasks();
+        model.addAttribute("task", task); // Use "task" (singular) to match th:object
+        model.addAttribute("customers", customerService.getAllCustomers()); // Needed for dropdown
+        model.addAttribute("employees", employeeService.getAllEmployees()); // Needed for dropdown
         return "admin/addTask";
-    }
-
-    @PostMapping({"tasks/add", "tasks/update/{id}"})
-    public String addTask(@PathVariable(required = false) Long id, Tasks tasks, Model model) {
-        String error = null;
-        if (id != null) {
-            error = taskService.updateTask(tasks, id);
-        } else {
-            error = taskService.createTask(tasks);
-        }
-        if (error != null) {
-            model.addAttribute("task", tasks);
-            model.addAttribute("customers", customerService.getAllCustomers());
-            model.addAttribute("employees", employeeService.getAllEmployees());
-            model.addAttribute("error", error);
-            return "admin/addTask";
-        }
-        return "redirect:/admin/tasks";
     }
 
     @GetMapping("tasks/delete/{id}")
@@ -76,12 +72,12 @@ public class AdminController {
         String error = taskService.deleteTask(id);
         if (error != null) {
             model.addAttribute("deleteError", error);
-            // Revisit this logic - showEmployees might not be the right place on error
-            return showTasks(model); // Changed from showEmployees to showTasks for consistency
+            // Repopulate task list on error if needed, or handle differently
+            model.addAttribute("tasks", taskService.getAllTasks());
+            return "admin/tasks"; // Return to the list view with error
         }
         return "redirect:/admin/tasks";
     }
-
 
     @GetMapping("employees")
     public String showEmployees(Model model) {
@@ -90,34 +86,20 @@ public class AdminController {
     }
 
     @GetMapping({"employees/add", "employees/update/{id}"})
-    public String addEmployee(@PathVariable(required = false) Long id, Model model) {
+    public String showAddEmployeeForm(@PathVariable(required = false) Long id, Model model) { // Renamed for clarity
         Employee employee = (id != null) ? employeeService.getEmployeeById(id) : new Employee();
         model.addAttribute("employee", employee);
         return "admin/addEmployee";
     }
 
-    @PostMapping({"employees/add", "employees/update/{id}"})
-    public String addEmployee(@PathVariable(required = false) Long id, Employee employee, Model model) {
-        String error = null;
-        if (id != null) {
-            error = employeeService.updateEmployee(employee, id);
-        } else {
-            error = employeeService.createEmployee(employee);
-        }
-        if (error != null) {
-            model.addAttribute("employee", employee);
-            model.addAttribute("error", error);
-            return "admin/addEmployee";
-        }
-        return "redirect:/admin/employees";
-    }
 
     @GetMapping("employees/delete/{id}")
     public String deleteEmployee(@PathVariable Long id, Model model) {
         String error = employeeService.deleteEmployee(id);
         if (error != null) {
             model.addAttribute("deleteError", error);
-            return showEmployees(model); // Show employees list again with error
+            model.addAttribute("employees", employeeService.getAllEmployees()); // Repopulate list
+            return "admin/employees"; // Return to list view with error
         }
         return "redirect:/admin/employees";
     }
@@ -126,53 +108,176 @@ public class AdminController {
     public String showCustomers(Model model) {
         model.addAttribute("customers", customerService.getAllCustomers());
         return "admin/customers";
-        // REMOVED: else part returning "redirect:/"
     }
 
     @GetMapping({"customers/add", "customers/update/{id}"})
-    public String addCustomer(@PathVariable(required = false) Long id, Model model) {
-        // REMOVED: if (isValidLogin()) { ... } check
+    public String showAddCustomerForm(@PathVariable(required = false) Long id, Model model) { // Renamed for clarity
         Customer customer = (id != null) ? customerService.getCustomerById(id) : new Customer();
         model.addAttribute("customer", customer);
         return "admin/addCustomer";
-        // REMOVED: else part returning "redirect:/"
-    }
-
-    @PostMapping({"customers/add", "customers/update/{id}"})
-    public String addCustomer(@PathVariable(required = false) Long id, Customer customer, Model model) {
-        // REMOVED: if (isValidLogin()) { ... } check
-        String error = null;
-        if (id != null) {
-            error = customerService.updateCustomer(customer, id);
-        } else {
-            error = customerService.createCustomer(customer);
-        }
-        if (error != null) {
-            model.addAttribute("customer", customer);
-            model.addAttribute("error", error);
-            return "admin/addCustomer";
-        }
-        return "redirect:/admin/customers";
-        // REMOVED: else part returning "redirect:/"
     }
 
     @GetMapping("customers/delete/{id}")
     public String deleteCustomer(@PathVariable Long id, Model model) {
-        // REMOVED: if (isValidLogin()) { ... } check
         String error = customerService.deleteCustomer(id);
         if (error != null) {
             model.addAttribute("deleteError", error);
-            // Revisit this logic - showEmployees seems wrong here
-            return showCustomers(model); // Changed to showCustomers
+            model.addAttribute("customers", customerService.getAllCustomers()); // Repopulate list
+            return "admin/customers"; // Return to list view with error
         }
-        // Changed redirect to /admin/customers for consistency
         return "redirect:/admin/customers";
-        // REMOVED: else part returning "redirect:/"
     }
 
     @GetMapping("/follow-up")
     public String showFollowUp(Model model) {
+        // Placeholder for Step 9 - Implement Follow-Up Feature
+        // Example: Fetch tasks due soon
+        // model.addAttribute("dueSoonTasks", taskService.getTasksDueSoon());
         return "admin/followup";
     }
 
+    // --- POST Mappings with Validation ---
+
+    // CHANGE: Use @ModelAttribute("task") to align with th:object="${task}"
+    // CHANGE: Parameter name changed from 'tasks' to 'task'
+    @PostMapping({"tasks/add", "tasks/update/{id}"})
+    public String saveOrUpdateTask(@PathVariable(required = false) Long id,
+                                   @Valid @ModelAttribute("task") Tasks task, // Use @ModelAttribute("task")
+                                   BindingResult bindingResult, // MUST come immediately after @Valid Tasks task
+                                   Model model) {
+
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            log.warn("Validation errors found for Task form!");
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                log.warn("Field '{}': Rejected value [{}]; Message: {}",
+                        error.getField(), error.getRejectedValue(), error.getDefaultMessage());
+            }
+
+            // Repopulate dropdown data needed by the form
+            model.addAttribute("customers", customerService.getAllCustomers());
+            model.addAttribute("employees", employeeService.getAllEmployees());
+
+            // CHANGE: No need to explicitly add 'task' back, @ModelAttribute + BindingResult handles it.
+            // Ensure the submitted 'task' object (with errors) is available to the view.
+
+            return "admin/addTask"; // Return to the form view to display errors
+        }
+
+        // --- No validation errors, proceed with saving/updating ---
+        String error = null;
+        try {
+            if (id != null) {
+                // You might want TaskService.updateTask to take 'id' and 'task'
+                // and handle fetching internally for robustness.
+                task.setId(id); // Ensure ID is set for update
+                error = taskService.updateTask(task, id); // Pass task object and ID
+            } else {
+                error = taskService.createTask(task);
+            }
+        } catch (Exception e) {
+            // Catch potential persistence or other exceptions during save/update
+            log.error("Error saving or updating task: {}", e.getMessage(), e);
+            error = "An unexpected error occurred while saving the task."; // User-friendly message
+        }
+
+
+        // Handle potential errors during the save/update operation
+        if (error != null) {
+            log.error("Persistence error saving task: {}", error);
+            // Add submitted data back to model for redisplay
+            // model.addAttribute("task", task); // @ModelAttribute should handle this, but double-check if needed
+            model.addAttribute("customers", customerService.getAllCustomers());
+            model.addAttribute("employees", employeeService.getAllEmployees());
+            model.addAttribute("persistenceError", error); // Use a specific key for persistence errors
+
+            return "admin/addTask"; // Return to form view with persistence error
+        }
+
+        // Success - redirect to prevent duplicate submissions
+        return "redirect:/admin/tasks";
+    }
+
+    // CHANGE: Use @ModelAttribute("employee") for consistency
+    @PostMapping({"employees/add", "employees/update/{id}"})
+    public String saveOrUpdateEmployee(@PathVariable(required = false) Long id,
+                                       @Valid @ModelAttribute("employee") Employee employee,
+                                       BindingResult bindingResult,
+                                       Model model) {
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            // 'employee' object with invalid data is automatically added back by @ModelAttribute
+            return "admin/addEmployee";
+        }
+
+        // No validation errors, proceed with create/update logic
+        String error = null;
+        try {
+            if (id != null) {
+                employee.setId(id); // Ensure ID is set
+                error = employeeService.updateEmployee(employee, id);
+            } else {
+                error = employeeService.createEmployee(employee);
+            }
+        } catch (Exception e) {
+            log.error("Error saving or updating employee: {}", e.getMessage(), e);
+            error = "An unexpected error occurred while saving the employee."; // User-friendly message
+        }
+
+
+        if (error != null) {
+            // Handle persistence errors (e.g., duplicate email)
+            // model.addAttribute("employee", employee); // Already handled by @ModelAttribute
+            model.addAttribute("persistenceError", error); // Show persistence error
+            return "admin/addEmployee";
+        }
+
+        // Success
+        return "redirect:/admin/employees";
+    }
+
+    // CHANGE: Use @ModelAttribute("customer") for consistency
+    @PostMapping({"customers/add", "customers/update/{id}"})
+    public String saveOrUpdateCustomer(@PathVariable(required = false) Long id,
+                                       @Valid @ModelAttribute("customer") Customer customer,
+                                       BindingResult bindingResult,
+                                       Model model) {
+        // Check for validation errors (including nested Insurance validation)
+        if (bindingResult.hasErrors()) {
+            // 'customer' object with invalid data is automatically added back by @ModelAttribute
+            return "admin/addCustomer";
+        }
+
+        // No validation errors, proceed with create/update logic
+        String error = null;
+        try {
+            if (id != null) {
+                customer.setId(id); // Ensure ID is set
+                // Make sure insurance ID is preserved if it exists
+                if (customer.getInsurance() != null && customer.getInsurance().getId() == null) {
+                    Customer existingCustomer = customerService.getCustomerById(id);
+                    if (existingCustomer != null && existingCustomer.getInsurance() != null) {
+                        customer.getInsurance().setId(existingCustomer.getInsurance().getId());
+                    }
+                }
+                error = customerService.updateCustomer(customer, id);
+            } else {
+                error = customerService.createCustomer(customer);
+            }
+        } catch (Exception e) {
+            log.error("Error saving or updating customer: {}", e.getMessage(), e);
+            error = "An unexpected error occurred while saving the customer."; // User-friendly message
+        }
+
+
+        if (error != null) {
+            // Handle persistence errors
+            // model.addAttribute("customer", customer); // Already handled by @ModelAttribute
+            model.addAttribute("persistenceError", error); // Show persistence error
+            return "admin/addCustomer";
+        }
+
+        // Success
+        return "redirect:/admin/customers";
+    }
 }

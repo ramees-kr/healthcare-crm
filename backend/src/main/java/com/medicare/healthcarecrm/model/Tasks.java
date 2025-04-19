@@ -1,6 +1,7 @@
 package com.medicare.healthcarecrm.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,27 +22,37 @@ public class Tasks {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotEmpty(message = "Task name cannot be empty")
+    @Size(max = 150, message = "Task name is too long (max 150 chars)")
     @Column(nullable = false)
     private String taskName;
 
+    @NotNull(message = "Task must be assigned to a customer")
     @ManyToOne
-    @JoinColumn(name = "customer_details", nullable = false)
+    @JoinColumn(name = "customer_details", nullable = false) // Keep DB constraint
     private Customer customer;
 
+    @NotNull(message = "Task must be assigned to an employee")
     @ManyToOne
-    @JoinColumn(name = "employee_details", nullable = false)
+    @JoinColumn(name = "employee_details", nullable = false) // Keep DB constraint
     private Employee employee;
 
+    @NotNull(message = "Due date cannot be null")
+    @FutureOrPresent(message = "Due date must be in the present or future")
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(nullable = false)
     private LocalDateTime dueDate;
 
+    @NotEmpty(message = "Priority cannot be empty")
     @Column(nullable = false)
     private String priority;
 
-    @Column(nullable = false)
+    @NotEmpty(message = "Description cannot be empty")
+    @Size(max = 2000, message = "Description is too long (max 2000 chars)")
+    @Column(nullable = false, length = 2000)
     private String description;
 
+    @NotEmpty(message = "Status cannot be empty")
     @Column(nullable = false)
     private String status;
 
