@@ -38,7 +38,6 @@ public class Tasks {
     private Employee employee;
 
     @NotNull(message = "Due date cannot be null")
-    @FutureOrPresent(message = "Due date must be in the present or future")
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(nullable = false)
     private LocalDateTime dueDate;
@@ -63,6 +62,10 @@ public class Tasks {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        // Status could also be defaulted here if not set
+        if (this.status == null || this.status.isEmpty()) {
+            this.status = "Pending";
+        }
     }
 
     @PreUpdate

@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
-import jakarta.validation.groups.Default; // Import Default group
 import com.medicare.healthcarecrm.validation.OnCreate;
 
 import org.springframework.dao.DataAccessException; // Import Spring DAO exception
 import org.springframework.dao.DataIntegrityViolationException; // Import specific exception
+import java.util.List;
 
 @RequestMapping("/admin")
 @Controller
@@ -177,10 +177,23 @@ public class AdminController {
         return "redirect:/admin/customers";
     }
 
+    // === UPDATED METHOD for Follow-Up Feature ===
     @GetMapping("/follow-up")
     public String showFollowUp(Model model) {
         model.addAttribute("activePage", "followup");
-        return "admin/followup";
+        try {
+            List<Tasks> overdueTasks = taskService.getOverdueTasks();
+            List<Tasks> tasksDueSoon = taskService.getTasksDueSoon(7); // Get tasks due in the next 7 days
+
+            model.addAttribute("overdueTasks", overdueTasks);
+            model.addAttribute("tasksDueSoon", tasksDueSoon);
+            log.info("Loaded Follow Up page with {} overdue tasks and {} tasks due soon.", overdueTasks.size(), tasksDueSoon.size());
+
+        } catch (Exception e) {
+            log.error("Error fetching tasks for follow-up page: {}", e.getMessage(), e);
+            model.addAttribute("followUpError", "Could not load follow-up task data.");
+        }
+        return "admin/followup"; // Return the name of the Thymeleaf template
     }
 
     // === POST Mappings ===
@@ -195,19 +208,15 @@ public class AdminController {
 
         // Explicitly fetch related entities
         Customer customer = null;
-        // Check if the nested customer object and its ID are present before attempting to fetch
         if (task.getCustomer() != null && task.getCustomer().getId() != null) {
             log.info("Fetching customer with ID: {}", task.getCustomer().getId());
             customer = customerService.getCustomerById(task.getCustomer().getId());
             log.info("Fetched customer: {}", customer);
             task.setCustomer(customer);
         } else if (task.getCustomer() != null && task.getCustomer().getId() == null) {
-            // If customer object exists but ID is null (e.g., empty selection), ensure task's customer is null
             task.setCustomer(null);
             log.warn("Task submitted with customer object but null ID.");
-            // Let validation handle required field if applicable
         } else {
-            // If task.getCustomer() was null initially
             task.setCustomer(null);
         }
 
@@ -238,16 +247,14 @@ public class AdminController {
             lookupError = true;
         }
 
-        // Check binding errors (including any added from failed lookups)
         if (bindingResult.hasErrors()) {
             model.addAttribute("activePage", "tasks");
-            log.warn("Validation errors (or missing related entity) found for Task form BEFORE service call!");
+            log.warn("Validation errors (or missing related entity) found for Task form BEFORE service call! Errors: {}", bindingResult.getAllErrors());
             model.addAttribute("customers", customerService.getAllCustomers());
             model.addAttribute("employees", employeeService.getAllEmployees());
             return "admin/addTask";
         }
 
-        // --- Proceed with saving/updating ---
         String error = null;
         try {
             log.info("Calling service to save/update task: {}", task);
@@ -263,7 +270,6 @@ public class AdminController {
             error = "An unexpected system error occurred while saving the task.";
         }
 
-        // --- Handle Result ---
         if (error != null) {
             log.error("Persistence error detected after service call: {}", error);
             model.addAttribute("activePage", "tasks");
@@ -279,25 +285,25 @@ public class AdminController {
 
     @PostMapping({"employees/add", "employees/update/{id}"})
     public String saveOrUpdateEmployee(@PathVariable(required = false) Long id,
-                                       @Validated(OnCreate.class) // Keep @Validated logic
+                                       @Validated({OnCreate.class}) // Apply OnCreate for new, Default implicitly applies too
                                        @ModelAttribute("employee") Employee employee,
                                        BindingResult bindingResult,
                                        Model model) {
 
         log.info("Attempting to save/update employee: {}", employee);
 
-        // --- Validation Check ---
         boolean isUpdate = (id != null);
-        if (isUpdate && bindingResult.hasFieldErrors("password") && bindingResult.getErrorCount() == bindingResult.getFieldErrorCount("password")) {
-            log.warn("Ignoring password validation errors during employee update for id={}", id);
-            // Proceed even with only password errors on update
-        } else if (bindingResult.hasErrors()) {
+        // Check if it's an update AND the only error is the password (which is allowed to be blank on update)
+        boolean onlyPasswordErrorOnUpdate = isUpdate &&
+                bindingResult.hasFieldErrors("password") &&
+                bindingResult.getFieldErrorCount("password") == bindingResult.getErrorCount();
+
+        if (bindingResult.hasErrors() && !onlyPasswordErrorOnUpdate) {
             model.addAttribute("activePage", "employees");
             log.warn("Validation errors found for Employee form BEFORE service call! isUpdate={}, Errors: {}", isUpdate, bindingResult.getAllErrors());
             return "admin/addEmployee";
         }
 
-        // --- Service Call ---
         String error = null;
         try {
             log.info("Calling service to save/update employee: {}", employee);
@@ -305,34 +311,30 @@ public class AdminController {
                 employee.setId(id);
                 error = employeeService.updateEmployee(employee, id);
             } else {
+                // Ensure validation group was applied correctly for create
                 error = employeeService.createEmployee(employee);
             }
             log.info("Service call finished. Returned error message: '{}'", error);
 
-            // <<< CHANGE: Refine Catch Block >>>
         } catch (DataIntegrityViolationException e) {
             log.error("Data integrity violation during saving/updating employee (id={}): {}", id, e.getMessage());
-            // Check if the violation is due to the unique email constraint
-            // NOTE: The actual constraint name ('employee.UK...') might differ in your DB schema.
-            // You might need to check your DB or trigger the error once to find the exact name.
-            if (e.getMessage() != null && e.getMessage().contains("employee.UK")) { // Common pattern for unique key names
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("unique constraint") && e.getMessage().toLowerCase().contains("email")) {
                 error = "Email address already exists. Please use a different email.";
             } else {
                 error = "A database constraint was violated. Please check your input.";
             }
-        } catch (DataAccessException e) { // Catch other Spring DAO exceptions
+        } catch (DataAccessException e) {
             log.error("DataAccessException during saving/updating employee (id={}): {}", id, e.getMessage(), e);
             error = "A database error occurred while saving the employee.";
-        } catch (Exception e) { // Catch any other unexpected exceptions
+        } catch (Exception e) {
             log.error("Unexpected exception during saving/updating employee (id={}): {}", id, e.getMessage(), e);
             error = "An unexpected system error occurred while saving the employee.";
         }
 
-        // --- Handle Result ---
         if (error != null) {
             log.error("Persistence error detected after service call: {}", error);
             model.addAttribute("activePage", "employees");
-            model.addAttribute("persistenceError", error); // Use the specific or generic error message
+            model.addAttribute("persistenceError", error);
             return "admin/addEmployee";
         }
 
@@ -350,7 +352,7 @@ public class AdminController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("activePage", "customers");
-            log.warn("Validation errors found for Customer form BEFORE service call!");
+            log.warn("Validation errors found for Customer form BEFORE service call! Errors: {}", bindingResult.getAllErrors());
             return "admin/addCustomer";
         }
 
@@ -365,29 +367,26 @@ public class AdminController {
             }
             log.info("Customer service call finished. Returned error message: '{}'", error);
 
-            // <<< CHANGE: Refine Catch Block >>>
         } catch (DataIntegrityViolationException e) {
             log.error("Data integrity violation during saving/updating customer (id={}): {}", id, e.getMessage());
-            // Check if the violation is due to the unique email constraint identified in your logs
-            if (e.getMessage() != null && e.getMessage().contains("customer.UKdwk6cx0afu8bs9o4t536v1j5v")) { // Use exact constraint name from your log
+            // Using a more general check for unique email constraint message
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("unique constraint") && e.getMessage().toLowerCase().contains("email")) {
                 error = "Email address already exists. Please use a different email.";
             } else {
-                // Handle other potential integrity violations if necessary
                 error = "A database constraint was violated. Please check your input.";
             }
-        } catch (DataAccessException e) { // Catch other database access issues
+        } catch (DataAccessException e) {
             log.error("DataAccessException during saving/updating customer (id={}): {}", id, e.getMessage(), e);
             error = "A database error occurred while saving the customer.";
-        } catch (Exception e) { // Catch any other unexpected exceptions
+        } catch (Exception e) {
             log.error("Unexpected exception during saving/updating customer (id={}): {}", id, e.getMessage(), e);
             error = "An unexpected system error occurred while saving the customer.";
         }
 
-        // --- Handle Result ---
         if (error != null) {
             log.error("Persistence error detected after customer service call: {}", error);
             model.addAttribute("activePage", "customers");
-            model.addAttribute("persistenceError", error); // Use the specific or generic error message
+            model.addAttribute("persistenceError", error);
             return "admin/addCustomer";
         }
 
