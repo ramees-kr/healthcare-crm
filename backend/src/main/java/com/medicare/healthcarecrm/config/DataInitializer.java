@@ -70,7 +70,7 @@ public class DataInitializer implements CommandLineRunner {
                     .build();
             try {
                 adminService.createAdmin(defaultAdmin);
-                log.info("Default admin user created successfully with email: admin@example.com");
+                log.info("Default admin user created successfully with email: admin@clinic.com");
                 log.warn("Default admin password is: password123");
             } catch (Exception e) {
                 log.error("Failed to create default admin user: {}", e.getMessage());
