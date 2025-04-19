@@ -3,6 +3,7 @@ package com.medicare.healthcarecrm.service;
 import com.medicare.healthcarecrm.model.Employee;
 import com.medicare.healthcarecrm.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,19 +14,17 @@ public class EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public List<Employee> getAllEmployees() {
         return employeeRepository.findAll();
     }
 
-    public Employee getEmployeeByEmail(String email, String password) {
-        if (employeeRepository.findByEmail(email) != null) {
-            return employeeRepository.findByEmail(email);
-        }
-        return null;
-    }
-
     public String createEmployee(Employee employee) {
         try {
+            // Encode the password before saving
+            employee.setPassword(passwordEncoder.encode(employee.getPassword()));
             employeeRepository.save(employee);
             return null;
         } catch (Exception e) {
@@ -39,8 +38,9 @@ public class EmployeeService {
         oldEmployee.setRole(employee.getRole());
         oldEmployee.setEmail(employee.getEmail());
 
-        if (!employee.getPassword().isEmpty()) {
-            oldEmployee.setPassword(employee.getPassword());
+        // Only update password if a new one is provided and encode it
+        if (employee.getPassword() != null && !employee.getPassword().isEmpty()) {
+            oldEmployee.setPassword(passwordEncoder.encode(employee.getPassword()));
         }
 
         try {
@@ -52,7 +52,8 @@ public class EmployeeService {
     }
 
     public Employee getEmployeeById(Long id) {
-        return employeeRepository.findById(id).get();
+        return employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
     }
 
     public String deleteEmployee(Long id) {

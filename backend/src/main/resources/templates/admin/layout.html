@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Admin Panel</title>
@@ -37,6 +38,11 @@
                         <a class="nav-link" th:href="@{/admin/follow-up}">
                             Follow Up
                         </a>
+                    </li>
+                    <li class="nav-item mt-auto pt-3 border-top"> <form th:action="@{/logout}" method="post" class="nav-link">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <button type="submit" class="btn btn-link nav-link px-0 py-0" style="color: inherit; text-decoration: none;"> Logout (<span sec:authentication="name">User</span>) </button>
+                    </form>
                     </li>
                 </ul>
             </div>
