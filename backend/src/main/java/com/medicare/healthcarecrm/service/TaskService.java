@@ -3,17 +3,17 @@ package com.medicare.healthcarecrm.service;
 import com.medicare.healthcarecrm.model.Employee;
 import com.medicare.healthcarecrm.model.Tasks;
 import com.medicare.healthcarecrm.repository.TasksRepository;
-import jakarta.persistence.EntityNotFoundException; // Import this
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException; // Import this
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Import this
-// Remove @PathVariable if not used elsewhere in this class
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.Collections; // Import Collections
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class TaskService {
@@ -25,42 +25,52 @@ public class TaskService {
         return tasksRepository.findAll();
     }
 
-    // Add this method
+    public long getTaskCountByStatus(String status) {
+        return tasksRepository.countByStatus(status);
+    }
+
     public List<Tasks> getTasksByEmployee(Employee employee) {
         if (employee == null) {
-            return Collections.emptyList(); // Return empty list if employee is null
+            return Collections.emptyList();
         }
         return tasksRepository.findByEmployee(employee);
     }
 
+    @Transactional
     public String createTask(Tasks tasks) {
         try {
+            if (tasks.getStatus() == null || tasks.getStatus().isEmpty()) {
+                tasks.setStatus("Pending"); // Example default
+            }
             tasksRepository.save(tasks);
             return null;
         } catch (Exception e) {
-            return e.getMessage();
+            return "Error creating task: " + e.getMessage();
         }
     }
-
+    @Transactional
     public String updateTask(Tasks tasks, Long id) {
-        // Consider adding checks to ensure the task exists before getting it
-        Tasks oldTask = getTaskById(id);
-        if (oldTask == null) {
-            return "Task with ID " + id + " not found.";
-        }
-        oldTask.setTaskName(tasks.getTaskName());
-        oldTask.setCustomer(tasks.getCustomer());
-        oldTask.setEmployee(tasks.getEmployee());
-        oldTask.setDueDate(tasks.getDueDate());
-        oldTask.setPriority(tasks.getPriority());
-        oldTask.setDescription(tasks.getDescription());
-        oldTask.setStatus(tasks.getStatus());
-
         try {
+            Optional<Tasks> existingTaskOpt = tasksRepository.findById(id);
+            if (existingTaskOpt.isEmpty()) {
+                return "Task not found with ID: " + id;
+            }
+            Tasks oldTask = existingTaskOpt.get();
+
+            // Update fields from incoming task object
+            oldTask.setTaskName(tasks.getTaskName());
+            oldTask.setCustomer(tasks.getCustomer()); // Assuming Customer object is correctly bound or fetched
+            oldTask.setEmployee(tasks.getEmployee()); // Assuming Employee object is correctly bound or fetched
+            oldTask.setDueDate(tasks.getDueDate());
+            oldTask.setPriority(tasks.getPriority());
+            oldTask.setDescription(tasks.getDescription());
+            oldTask.setStatus(tasks.getStatus());
+
             tasksRepository.save(oldTask);
             return null;
         } catch (Exception e) {
-            return e.getMessage();
+            // Log exception
+            return "Error updating task: " + e.getMessage();
         }
     }
 
@@ -69,7 +79,8 @@ public class TaskService {
         return tasksRepository.findById(id).orElse(null);
     }
 
-    public String deleteTask(@PathVariable Long id) {
+    @Transactional
+    public String deleteTask(Long id) {
         try {
             if (!tasksRepository.existsById(id)) {
                 return "Task with ID " + id + " not found.";
@@ -77,47 +88,39 @@ public class TaskService {
             tasksRepository.deleteById(id);
             return null;
         } catch (Exception e) {
-            return e.getMessage();
+            // Log exception
+            return "Error deleting task: " + e.getMessage();
         }
     }
 
-
-    /**
-     * Updates the status of a specific task, ensuring the requesting employee is assigned to it.
-     *
-     * @param taskId         The ID of the task to update.
-     * @param newStatus      The new status to set.
-     * @param currentEmployee The employee attempting the update.
-     * @return null on success, error message string on failure.
-     * @throws EntityNotFoundException if task not found.
-     * @throws AccessDeniedException if employee is not assigned to the task.
-     */
     @Transactional // Make this transactional
     public String updateTaskStatus(Long taskId, String newStatus, Employee currentEmployee) {
         if (currentEmployee == null) {
+            // This should ideally be caught earlier by security context
             return "Error: Could not identify current employee.";
         }
 
         try {
+            // Use orElseThrow for cleaner not-found handling
             Tasks task = tasksRepository.findById(taskId)
                     .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + taskId));
 
             // SECURITY CHECK: Ensure the current employee is assigned to this task
-            if (!Objects.equals(task.getEmployee().getId(), currentEmployee.getId())) {
+            if (task.getEmployee() == null || !Objects.equals(task.getEmployee().getId(), currentEmployee.getId())) {
                 throw new AccessDeniedException("You are not authorized to update this task.");
             }
 
-            // TODO: Optional - Add validation for allowed status transitions if needed
-            // (e.g., cannot go from Completed back to Pending)
+            // Add validation for allowed status transitions if needed
+            // (e.g., cannot go from Completed back to Pending without specific logic)
 
             task.setStatus(newStatus);
-            tasksRepository.save(task);
+            tasksRepository.save(task); // Save the updated task
             return null; // Success
 
         } catch (EntityNotFoundException | AccessDeniedException e) {
-            // Log the exception details if needed
+            // Log the exception details if needed (use SLF4J logger)
             // log.error("Error updating task status for task {}: {}", taskId, e.getMessage());
-            return e.getMessage(); // Return error message to controller
+            return e.getMessage(); // Return specific error message
         } catch (Exception e) {
             // Log unexpected exceptions
             // log.error("Unexpected error updating task status for task {}: {}", taskId, e.getMessage(), e);

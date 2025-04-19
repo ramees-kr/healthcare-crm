@@ -10,6 +10,12 @@ import java.util.List; // Import List
 @Repository
 public interface TasksRepository extends JpaRepository<Tasks, Long> {
 
-    // Add this method to find tasks by employee
     List<Tasks> findByEmployee(Employee employee);
+
+    /**
+     * Counts the number of tasks with a specific status.
+     * @param status The status to count tasks for (e.g., "Pending").
+     * @return The number of tasks matching the status.
+     */
+    long countByStatus(String status);
 }

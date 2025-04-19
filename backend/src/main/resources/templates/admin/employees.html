@@ -4,42 +4,71 @@
       layout:decorate="~{/admin/layout}">
 <head>
     <title>Employees Management</title>
+    <style>
+        /* Minor adjustments if needed */
+        .action-buttons a {
+            margin-right: 5px; /* Space between buttons */
+        }
+    </style>
 </head>
 <body>
+
+<th:block layout:fragment="page-title">Employees Management</th:block>
+
 <div layout:fragment="content">
-    <h2 class="h2">Employees Management</h2>
+
+    <a th:href="@{/admin/employees/add}" class="btn btn-primary mb-3">
+        <i class="bi bi-person-plus-fill"></i> Add Employee
+    </a>
+
+    <div th:if="${deleteError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> Error: <span th:text="${deleteError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <div class="table-responsive">
-        <a th:href="@{/admin/employees/add}" class="btn btn-sm btn-primary">Add Employee</a> <br>
-        <span style="color: red;" th:text="${deleteError}"></span>
-        <table class="table table-striped table-sm">
-            <thead>
+        <table class="table table-striped table-hover table-sm caption-top">
+            <caption>List of all employees</caption>
+            <thead class="table-light">
             <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Email</th>
-                <th>Created At</th>
-                <th>Updated At</th>
-                <th>Actions</th>
+                <th scope="col">Name</th>
+                <th scope="col">Role</th>
+                <th scope="col">Email</th>
+                <th scope="col">Created At</th>
+                <th scope="col">Updated At</th>
+                <th scope="col" class="text-center">Actions</th>
             </tr>
             </thead>
-            <tbody th:each="employee : ${employees}">
-            <tr>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(employees)}">
+                <td colspan="6" class="text-center text-muted">No employees found.</td>
+            </tr>
+            <tr th:each="employee : ${employees}">
                 <td th:text="${employee.name}"></td>
                 <td th:text="${employee.role}"></td>
                 <td th:text="${employee.email}"></td>
-                <td th:text="${#temporals.format(employee.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                <td th:text="${#temporals.format(employee.updatedAt, 'dd/MM/yyyy HH:mm')}"></td>
-                <td>
+                <td th:text="${employee.createdAt != null ? #temporals.format(employee.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>
+                <td th:text="${employee.updatedAt != null ? #temporals.format(employee.updatedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}"></td>
+                <td class="text-center action-buttons">
                     <a th:href="@{/admin/employees/update/{id}(id=${employee.id})}"
-                       class="btn btn-sm btn-primary">Edit</a>
+                       class="btn btn-sm btn-outline-primary" title="Edit Employee">
+                        <i class="bi bi-pencil-fill"></i> Edit
+                    </a>
                     <a th:href="@{/admin/employees/delete/{id}(id=${employee.id})}"
-                       th:onclick="return confirm('Are you sure you want to delete this employee?')"
-                       class="btn btn-sm btn-danger">Delete</a>
+                       th:data-employee-name="${employee.name}" onclick="return confirmEmployeeDelete(this);" class="btn btn-sm btn-outline-danger" title="Delete Employee">
+                        <i class="bi bi-trash-fill"></i> Delete
+                    </a>
                 </td>
             </tr>
             </tbody>
         </table>
-    </div>
-</div>
-</body>
+    </div> <script>
+    function confirmEmployeeDelete(link) {
+        const employeeName = link.getAttribute('data-employee-name');
+        const escapedEmployeeName = employeeName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        return confirm('Are you sure you want to delete employee: ' + escapedEmployeeName + '?');
+    }
+</script>
+
+</div> </body>
 </html>
