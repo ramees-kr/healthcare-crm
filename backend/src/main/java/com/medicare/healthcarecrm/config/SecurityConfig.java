@@ -2,8 +2,10 @@ package com.medicare.healthcarecrm.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -14,46 +16,60 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String[] SWAGGER_PATHS = {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+    };
+
     @Bean
     public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean // Replace the existing filterChain method with this one
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // --- CSRF Configuration ---
+                .csrf(csrf -> csrf
+                                // Disable CSRF specifically for API paths
+                                .ignoringRequestMatchers("/api/**")
+                        // Keep CSRF enabled for all other paths (default)
+                )
                 .authorizeHttpRequests(authorize -> authorize
-                        // Allow access to static resources and the home/login page for everyone
+                        // --- Public Access ---
                         .requestMatchers("/", "/index", "/login", "/css/**", "/js/**", "/images/**").permitAll()
-                        // --- Authorization Rules ---
-                        // Require ROLE_ADMIN for any URL starting with /admin/
+                        .requestMatchers(SWAGGER_PATHS).permitAll()
+
+                        // --- MVC Authorization Rules ---
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        // Require ROLE_EMPLOYEE for any URL starting with /employee/
                         .requestMatchers("/employee/**").hasRole("EMPLOYEE")
-                        // Require authentication for the default success URL
                         .requestMatchers("/default").authenticated()
+
+                        // --- API Authorization Rules ---
+                        .requestMatchers(HttpMethod.GET, "/api/customers/**", "/api/employees/**", "/api/tasks/**").hasAnyRole("ADMIN", "EMPLOYEE")
+                        .requestMatchers("/api/customers/**", "/api/employees/**", "/api/tasks/**").hasRole("ADMIN")
+
                         // --- Fallback Rule ---
-                        // Any other request not matched above must be authenticated
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login") // Specify custom login page URL
-                        .loginProcessingUrl("/login") // URL to submit username/password
-                        .defaultSuccessUrl("/default", true) // Redirect handler after successful login
-                        .permitAll() // Allow everyone to access the login page itself
-                )
-                .logout(logout -> logout
-                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // URL to trigger logout
-                        .logoutSuccessUrl("/login?logout") // Redirect after logout
-                        .invalidateHttpSession(true) // Invalidate session on logout
-                        .deleteCookies("JSESSIONID") // Delete session cookie
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/default", true)
                         .permitAll()
                 )
-                // Optional: Configure exception handling for access denied
+                .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
+                )
                 .exceptionHandling(exceptions -> exceptions
-                        .accessDeniedPage("/access-denied") // Redirect to a custom access denied page if needed
-                );
-
+                        .accessDeniedPage("/access-denied")
+                )
+        ;
 
         return http.build();
     }
