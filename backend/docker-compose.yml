@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: healthcarecrm-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/healthcarecrm?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      db: # Modified depends_on structure
+        condition: service_healthy # Wait for db to pass healthcheck
+    # networks: # Optional: define networks if needed, often works with default
+    #   - backend_network
+
+  db:
+    image: mysql:8.0
+    container_name: healthcarecrm-db
+    # Optional: Map host port 3307 to container port 3306
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=healthcarecrm
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck: # Added healthcheck
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}"] # Command to check health
+      interval: 10s # Check every 10 seconds
+      timeout: 5s # Wait 5 seconds for check to return
+      retries: 5 # Retry 5 times before marking unhealthy
+      start_period: 30s # Grace period for initial startup
+    # networks: # Optional
+    #   - backend_network
+
+volumes:
+  mysql_data:
+
+# Optional: define networks if needed
+# networks:
+#  backend_network:
+#    driver: bridge
