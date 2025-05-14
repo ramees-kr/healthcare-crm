@@ -1,5 +1,7 @@
 # Healthcare CRM - J2EE Business Components Project
 
+![](design-docs/screenshots/thumbnail.png)
+
 **Project Goal:** A CRM system for healthcare centers to manage customer records, insurance details, and employee task assignments using Spring Boot, Thymeleaf, Spring Security, REST APIs, Docker deployment, and AWS RDS for database hosting.
 
 **Group Members:**
