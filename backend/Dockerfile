@@ -1,5 +1,3 @@
-# Use an appropriate base image with Java 21 (matching your pom.xml)
-# Eclipse Temurin is a good choice (formerly AdoptOpenJDK)
 FROM eclipse-temurin:21-jdk-jammy
 
 # Set a working directory inside the container

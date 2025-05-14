@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -28,7 +28,10 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck: # Added healthcheck
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}"] # Command to check health
+      test: [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}",
+        ] # Command to check health
       interval: 10s # Check every 10 seconds
       timeout: 5s # Wait 5 seconds for check to return
       retries: 5 # Retry 5 times before marking unhealthy
@@ -38,7 +41,6 @@ services:
 
 volumes:
   mysql_data:
-
 # Optional: define networks if needed
 # networks:
 #  backend_network:

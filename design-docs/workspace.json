@@ -1,0 +1,640 @@
+{
+  "configuration" : { },
+  "description" : "Architecture diagram for Healthcare CRM Spring Boot app with Docker deployment.",
+  "documentation" : { },
+  "id" : 1,
+  "lastModifiedAgent" : "structurizr-ui",
+  "lastModifiedDate" : "2025-04-22T06:42:31Z",
+  "model" : {
+    "deploymentNodes" : [ {
+      "containerInstances" : [ {
+        "containerId" : "4",
+        "deploymentGroups" : [ "Default" ],
+        "environment" : "Docker Compose",
+        "healthChecks" : [ {
+          "interval" : 60,
+          "name" : "url",
+          "timeout" : 10,
+          "url" : "http://localhost:8080/actuator/health"
+        } ],
+        "id" : "36",
+        "instanceId" : 1,
+        "properties" : {
+          "structurizr.dsl.identifier" : "appinstance"
+        },
+        "relationships" : [ {
+          "description" : "Reads/Writes data",
+          "destinationId" : "37",
+          "id" : "38",
+          "linkedRelationshipId" : "33",
+          "sourceId" : "36",
+          "technology" : "JDBC"
+        }, {
+          "description" : "Connects to database",
+          "destinationId" : "37",
+          "id" : "39",
+          "linkedRelationshipId" : "34",
+          "sourceId" : "36",
+          "technology" : "JDBC"
+        } ],
+        "tags" : "Container Instance,Docker Container"
+      }, {
+        "containerId" : "17",
+        "deploymentGroups" : [ "Default" ],
+        "environment" : "Docker Compose",
+        "id" : "37",
+        "instanceId" : 1,
+        "properties" : {
+          "structurizr.dsl.identifier" : "dbinstance"
+        },
+        "tags" : "Container Instance,Docker Container"
+      } ],
+      "description" : "Your laptop or desktop running Docker Engine",
+      "environment" : "Docker Compose",
+      "id" : "35",
+      "instances" : "1",
+      "name" : "Docker Host",
+      "properties" : {
+        "structurizr.dsl.identifier" : "dockerhost"
+      },
+      "tags" : "Element,Deployment Node,Container Orchestration"
+    } ],
+    "people" : [ {
+      "description" : "Admin or Employee using a browser",
+      "id" : "1",
+      "location" : "Unspecified",
+      "name" : "Web User",
+      "properties" : {
+        "structurizr.dsl.identifier" : "webuser"
+      },
+      "relationships" : [ {
+        "description" : "Uses via browser",
+        "destinationId" : "4",
+        "id" : "18",
+        "sourceId" : "1",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Uses via browser",
+        "destinationId" : "3",
+        "id" : "19",
+        "linkedRelationshipId" : "18",
+        "sourceId" : "1",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Tool or developer accessing REST APIs",
+      "id" : "2",
+      "location" : "Unspecified",
+      "name" : "API Client",
+      "properties" : {
+        "structurizr.dsl.identifier" : "apiclient"
+      },
+      "relationships" : [ {
+        "description" : "Calls REST APIs",
+        "destinationId" : "6",
+        "id" : "20",
+        "sourceId" : "2",
+        "tags" : "Relationship",
+        "technology" : "HTTPS, JSON"
+      }, {
+        "description" : "Calls REST APIs",
+        "destinationId" : "4",
+        "id" : "21",
+        "linkedRelationshipId" : "20",
+        "sourceId" : "2",
+        "technology" : "HTTPS, JSON"
+      }, {
+        "description" : "Calls REST APIs",
+        "destinationId" : "3",
+        "id" : "22",
+        "linkedRelationshipId" : "20",
+        "sourceId" : "2",
+        "technology" : "HTTPS, JSON"
+      } ],
+      "tags" : "Element,Person"
+    } ],
+    "softwareSystems" : [ {
+      "containers" : [ {
+        "components" : [ {
+          "description" : "Handles web routes & Thymeleaf rendering",
+          "documentation" : { },
+          "id" : "5",
+          "name" : "Spring MVC Controllers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "webcontroller"
+          },
+          "relationships" : [ {
+            "description" : "Renders HTML views",
+            "destinationId" : "7",
+            "id" : "23",
+            "sourceId" : "5",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Invokes business logic",
+            "destinationId" : "13",
+            "id" : "24",
+            "sourceId" : "5",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring MVC"
+        }, {
+          "description" : "Handles /api/** endpoints",
+          "documentation" : { },
+          "id" : "6",
+          "name" : "REST Controllers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "restcontroller"
+          },
+          "relationships" : [ {
+            "description" : "Invokes business logic",
+            "destinationId" : "13",
+            "id" : "25",
+            "sourceId" : "6",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring MVC REST"
+        }, {
+          "description" : "Renders server‑side HTML views",
+          "documentation" : { },
+          "id" : "7",
+          "name" : "Thymeleaf Template Engine",
+          "properties" : {
+            "structurizr.dsl.identifier" : "thymeleafengine"
+          },
+          "tags" : "Element,Component",
+          "technology" : "Thymeleaf"
+        }, {
+          "description" : "Serves CSS, JS, and images",
+          "documentation" : { },
+          "id" : "8",
+          "name" : "Static Assets",
+          "properties" : {
+            "structurizr.dsl.identifier" : "staticassets"
+          },
+          "tags" : "Element,Component",
+          "technology" : "Web Resources"
+        }, {
+          "description" : "Interactive API docs at /swagger-ui.html",
+          "documentation" : { },
+          "id" : "9",
+          "name" : "Swagger UI",
+          "properties" : {
+            "structurizr.dsl.identifier" : "swaggerui"
+          },
+          "tags" : "Element,Component",
+          "technology" : "Springdoc OpenAPI"
+        }, {
+          "description" : "Secures HTTP requests",
+          "documentation" : { },
+          "id" : "10",
+          "name" : "Security Filter Chain",
+          "properties" : {
+            "structurizr.dsl.identifier" : "securityfilterchain"
+          },
+          "relationships" : [ {
+            "description" : "Authenticates users",
+            "destinationId" : "11",
+            "id" : "27",
+            "sourceId" : "10",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Secures web UI routes",
+            "destinationId" : "5",
+            "id" : "29",
+            "sourceId" : "10",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Secures API endpoints",
+            "destinationId" : "6",
+            "id" : "30",
+            "sourceId" : "10",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring Security"
+        }, {
+          "description" : "Loads users for authentication",
+          "documentation" : { },
+          "id" : "11",
+          "name" : "UserDetailsServiceImpl",
+          "properties" : {
+            "structurizr.dsl.identifier" : "userdetailsservice"
+          },
+          "relationships" : [ {
+            "description" : "Loads user data",
+            "destinationId" : "14",
+            "id" : "28",
+            "sourceId" : "11",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring Security"
+        }, {
+          "description" : "Hashes passwords",
+          "documentation" : { },
+          "id" : "12",
+          "name" : "BCryptPasswordEncoder",
+          "properties" : {
+            "structurizr.dsl.identifier" : "passwordencoder"
+          },
+          "tags" : "Element,Component",
+          "technology" : "Spring Security"
+        }, {
+          "description" : "Business logic (CustomerService, TaskService)",
+          "documentation" : { },
+          "id" : "13",
+          "name" : "Service Layer",
+          "properties" : {
+            "structurizr.dsl.identifier" : "servicelayer"
+          },
+          "relationships" : [ {
+            "description" : "Performs CRUD operations",
+            "destinationId" : "14",
+            "id" : "26",
+            "sourceId" : "13",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Java Classes"
+        }, {
+          "description" : "Data access via JPA/Hibernate",
+          "documentation" : { },
+          "id" : "14",
+          "name" : "Repository Layer",
+          "properties" : {
+            "structurizr.dsl.identifier" : "repolayer"
+          },
+          "relationships" : [ {
+            "description" : "Reads/Writes data",
+            "destinationId" : "17",
+            "id" : "32",
+            "sourceId" : "14",
+            "tags" : "Relationship",
+            "technology" : "JDBC"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring Data JPA"
+        }, {
+          "description" : "JPA entities: Customer, Employee, Task…",
+          "documentation" : { },
+          "id" : "15",
+          "name" : "Domain Model",
+          "properties" : {
+            "structurizr.dsl.identifier" : "domainmodel"
+          },
+          "tags" : "Element,Component",
+          "technology" : "JPA Entities"
+        }, {
+          "description" : "Seeds mock data on startup",
+          "documentation" : { },
+          "id" : "16",
+          "name" : "DataInitializer",
+          "properties" : {
+            "structurizr.dsl.identifier" : "datainitializer"
+          },
+          "relationships" : [ {
+            "description" : "Initializes mock data on startup",
+            "destinationId" : "13",
+            "id" : "31",
+            "sourceId" : "16",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring Boot Runner"
+        } ],
+        "description" : "Embedded Tomcat running the Spring Boot application",
+        "documentation" : { },
+        "id" : "4",
+        "name" : "Spring Boot App",
+        "properties" : {
+          "structurizr.dsl.identifier" : "app"
+        },
+        "relationships" : [ {
+          "description" : "Reads/Writes data",
+          "destinationId" : "17",
+          "id" : "33",
+          "linkedRelationshipId" : "32",
+          "sourceId" : "4",
+          "technology" : "JDBC"
+        }, {
+          "description" : "Connects to database",
+          "destinationId" : "17",
+          "id" : "34",
+          "sourceId" : "4",
+          "tags" : "Relationship",
+          "technology" : "JDBC"
+        } ],
+        "tags" : "Element,Container,Application",
+        "technology" : "Java 21, Spring Boot 3.3.0"
+      }, {
+        "description" : "Stores the healthcarecrm schema data",
+        "documentation" : { },
+        "id" : "17",
+        "name" : "MySQL Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "db"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "MySQL 8"
+      } ],
+      "description" : "Spring Boot‑based CRM for healthcare centers",
+      "documentation" : { },
+      "id" : "3",
+      "location" : "Unspecified",
+      "name" : "Healthcare CRM",
+      "properties" : {
+        "structurizr.dsl.identifier" : "healthcarecrm"
+      },
+      "tags" : "Element,Software System"
+    } ]
+  },
+  "name" : "Healthcare CRM Application",
+  "properties" : {
+    "structurizr.dsl" : "d29ya3NwYWNlICJIZWFsdGhjYXJlIENSTSBBcHBsaWNhdGlvbiIgIkFyY2hpdGVjdHVyZSBkaWFncmFtIGZvciBIZWFsdGhjYXJlIENSTSBTcHJpbmcgQm9vdCBhcHAgd2l0aCBEb2NrZXIgZGVwbG95bWVudC4iIHsKCiAgbW9kZWwgewogICAgd2ViVXNlciAgID0gcGVyc29uICJXZWIgVXNlciIgICAiQWRtaW4gb3IgRW1wbG95ZWUgdXNpbmcgYSBicm93c2VyIgogICAgYXBpQ2xpZW50ID0gcGVyc29uICJBUEkgQ2xpZW50IiAiVG9vbCBvciBkZXZlbG9wZXIgYWNjZXNzaW5nIFJFU1QgQVBJcyIKCiAgICBoZWFsdGhjYXJlQ1JNID0gc29mdHdhcmVTeXN0ZW0gIkhlYWx0aGNhcmUgQ1JNIiAiU3ByaW5nIEJvb3TigJFiYXNlZCBDUk0gZm9yIGhlYWx0aGNhcmUgY2VudGVycyIgewoKICAgICAgYXBwID0gY29udGFpbmVyICJTcHJpbmcgQm9vdCBBcHAiIHsKICAgICAgICBkZXNjcmlwdGlvbiAiRW1iZWRkZWQgVG9tY2F0IHJ1bm5pbmcgdGhlIFNwcmluZyBCb290IGFwcGxpY2F0aW9uIgogICAgICAgIHRlY2hub2xvZ3kgICJKYXZhIDIxLCBTcHJpbmcgQm9vdCAzLjMuMCIKICAgICAgICB0YWdzICAgICAgICAiQXBwbGljYXRpb24iCgogICAgICAgIHdlYkNvbnRyb2xsZXIgICAgICAgPSBjb21wb25lbnQgIlNwcmluZyBNVkMgQ29udHJvbGxlcnMiICAgICAgIkhhbmRsZXMgd2ViIHJvdXRlcyAmIFRoeW1lbGVhZiByZW5kZXJpbmciICAgICAgIlNwcmluZyBNVkMiCiAgICAgICAgcmVzdENvbnRyb2xsZXIgICAgICA9IGNvbXBvbmVudCAiUkVTVCBDb250cm9sbGVycyIgICAgICAgICAgICAiSGFuZGxlcyAvYXBpLyoqIGVuZHBvaW50cyIgICAgICAgICAgICAgICAgICAgIlNwcmluZyBNVkMgUkVTVCIKICAgICAgICB0aHltZWxlYWZFbmdpbmUgICAgID0gY29tcG9uZW50ICJUaHltZWxlYWYgVGVtcGxhdGUgRW5naW5lIiAgICJSZW5kZXJzIHNlcnZlcuKAkXNpZGUgSFRNTCB2aWV3cyIgICAgICAgICAgICAiVGh5bWVsZWFmIgogICAgICAgIHN0YXRpY0Fzc2V0cyAgICAgICAgPSBjb21wb25lbnQgIlN0YXRpYyBBc3NldHMiICAgICAgICAgICAgICAgIlNlcnZlcyBDU1MsIEpTLCBhbmQgaW1hZ2VzIiAgICAgICAgICAgICAgICAiV2ViIFJlc291cmNlcyIKICAgICAgICBzd2FnZ2VyVUkgICAgICAgICAgID0gY29tcG9uZW50ICJTd2FnZ2VyIFVJIiAgICAgICAgICAgICAgICAgICJJbnRlcmFjdGl2ZSBBUEkgZG9jcyBhdCAvc3dhZ2dlci11aS5odG1sIiAgIlNwcmluZ2RvYyBPcGVuQVBJIgogICAgICAgIHNlY3VyaXR5RmlsdGVyQ2hhaW4gPSBjb21wb25lbnQgIlNlY3VyaXR5IEZpbHRlciBDaGFpbiIgICAgICAgIlNlY3VyZXMgSFRUUCByZXF1ZXN0cyIgICAgICAgICAgICAgICAgICAgICAiU3ByaW5nIFNlY3VyaXR5IgogICAgICAgIHVzZXJEZXRhaWxzU2VydmljZSAgPSBjb21wb25lbnQgIlVzZXJEZXRhaWxzU2VydmljZUltcGwiICAgICAgIkxvYWRzIHVzZXJzIGZvciBhdXRoZW50aWNhdGlvbiIgICAgICAgICAgICAiU3ByaW5nIFNlY3VyaXR5IgogICAgICAgIHBhc3N3b3JkRW5jb2RlciAgICAgPSBjb21wb25lbnQgIkJDcnlwdFBhc3N3b3JkRW5jb2RlciIgICAgICAgIkhhc2hlcyBwYXNzd29yZHMiICAgICAgICAgICAgICAgICAgICAgICAgICAiU3ByaW5nIFNlY3VyaXR5IgogICAgICAgIHNlcnZpY2VMYXllciAgICAgICAgPSBjb21wb25lbnQgIlNlcnZpY2UgTGF5ZXIiICAgICAgICAgICAgICAgIkJ1c2luZXNzIGxvZ2ljIChDdXN0b21lclNlcnZpY2UsIFRhc2tTZXJ2aWNlKSIgIkphdmEgQ2xhc3NlcyIKICAgICAgICByZXBvTGF5ZXIgICAgICAgICAgID0gY29tcG9uZW50ICJSZXBvc2l0b3J5IExheWVyIiAgICAgICAgICAgICJEYXRhIGFjY2VzcyB2aWEgSlBBL0hpYmVybmF0ZSIgICAgICAgICAgICAgIlNwcmluZyBEYXRhIEpQQSIKICAgICAgICBkb21haW5Nb2RlbCAgICAgICAgID0gY29tcG9uZW50ICJEb21haW4gTW9kZWwiICAgICAgICAgICAgICAgICJKUEEgZW50aXRpZXM6IEN1c3RvbWVyLCBFbXBsb3llZSwgVGFza+KApiIgICAgICJKUEEgRW50aXRpZXMiCiAgICAgICAgZGF0YUluaXRpYWxpemVyICAgICA9IGNvbXBvbmVudCAiRGF0YUluaXRpYWxpemVyIiAgICAgICAgICAgICAiU2VlZHMgbW9jayBkYXRhIG9uIHN0YXJ0dXAiICAgICAgICAgICAgICAgICJTcHJpbmcgQm9vdCBSdW5uZXIiCiAgICAgIH0KCiAgICAgIGRiID0gY29udGFpbmVyICJNeVNRTCBEYXRhYmFzZSIgewogICAgICAgIGRlc2NyaXB0aW9uICJTdG9yZXMgdGhlIGhlYWx0aGNhcmVjcm0gc2NoZW1hIGRhdGEiCiAgICAgICAgdGVjaG5vbG9neSAgIk15U1FMIDgiCiAgICAgICAgdGFncyAgICAgICAgIkRhdGFiYXNlIgogICAgICB9CiAgICB9CgogICAgd2ViVXNlciAgICAtPiBhcHAgICAgICAgICAgICAgIlVzZXMgdmlhIGJyb3dzZXIiICAgICAgICAgICJIVFRQUyIKICAgIGFwaUNsaWVudCAgLT4gcmVzdENvbnRyb2xsZXIgICJDYWxscyBSRVNUIEFQSXMiICAgICAgICAgICAiSFRUUFMsIEpTT04iCgogICAgd2ViQ29udHJvbGxlciAgICAgLT4gdGh5bWVsZWFmRW5naW5lICAgICAiUmVuZGVycyBIVE1MIHZpZXdzIgogICAgd2ViQ29udHJvbGxlciAgICAgLT4gc2VydmljZUxheWVyICAgICAgICAiSW52b2tlcyBidXNpbmVzcyBsb2dpYyIKICAgIHJlc3RDb250cm9sbGVyICAgIC0+IHNlcnZpY2VMYXllciAgICAgICAgIkludm9rZXMgYnVzaW5lc3MgbG9naWMiCiAgICBzZXJ2aWNlTGF5ZXIgICAgICAtPiByZXBvTGF5ZXIgICAgICAgICAgICJQZXJmb3JtcyBDUlVEIG9wZXJhdGlvbnMiCiAgICBzZWN1cml0eUZpbHRlckNoYWluIC0+IHVzZXJEZXRhaWxzU2VydmljZSAgIkF1dGhlbnRpY2F0ZXMgdXNlcnMiCiAgICB1c2VyRGV0YWlsc1NlcnZpY2UgIC0+IHJlcG9MYXllciAgICAgICAgICAgIkxvYWRzIHVzZXIgZGF0YSIKICAgIHNlY3VyaXR5RmlsdGVyQ2hhaW4gLT4gd2ViQ29udHJvbGxlciAgICAgICAiU2VjdXJlcyB3ZWIgVUkgcm91dGVzIgogICAgc2VjdXJpdHlGaWx0ZXJDaGFpbiAtPiByZXN0Q29udHJvbGxlciAgICAgICJTZWN1cmVzIEFQSSBlbmRwb2ludHMiCiAgICBkYXRhSW5pdGlhbGl6ZXIgICAgIC0+IHNlcnZpY2VMYXllciAgICAgICAgIkluaXRpYWxpemVzIG1vY2sgZGF0YSBvbiBzdGFydHVwIgoKICAgIHJlcG9MYXllciAtPiBkYiAgICAgICAgICAgICJSZWFkcy9Xcml0ZXMgZGF0YSIgICAgICJKREJDIgogICAgYXBwICAgICAgIC0+IGRiICAgICAgICAgICAgIkNvbm5lY3RzIHRvIGRhdGFiYXNlIiAgIkpEQkMiCgoKICAgIGRvY2tlckNvbXBvc2UgPSBkZXBsb3ltZW50RW52aXJvbm1lbnQgIkRvY2tlciBDb21wb3NlIiB7CgogICAgICBkb2NrZXJIb3N0ID0gZGVwbG95bWVudE5vZGUgIkRvY2tlciBIb3N0IiAiWW91ciBsYXB0b3Agb3IgZGVza3RvcCBydW5uaW5nIERvY2tlciBFbmdpbmUiIHsKICAgICAgICB0YWdzICJDb250YWluZXIgT3JjaGVzdHJhdGlvbiIKCiAgICAgICAgYXBwSW5zdGFuY2UgPSBjb250YWluZXJJbnN0YW5jZSBhcHAgewogICAgICAgICAgdGFncyAiRG9ja2VyIENvbnRhaW5lciIKICAgICAgICAgIGhlYWx0aENoZWNrIHVybCAiaHR0cDovL2xvY2FsaG9zdDo4MDgwL2FjdHVhdG9yL2hlYWx0aCIgNjAgMTAKICAgICAgICB9CiAgICAgICAgZGJJbnN0YW5jZSA9IGNvbnRhaW5lckluc3RhbmNlIGRiIHsKICAgICAgICAgIHRhZ3MgIkRvY2tlciBDb250YWluZXIiCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgfQoKICB2aWV3cyB7CiAgICBzeXN0ZW1Db250ZXh0IGhlYWx0aGNhcmVDUk0gIlN5c3RlbUNvbnRleHQiIHsKICAgICAgaW5jbHVkZSAqCiAgICAgIGF1dG9sYXlvdXQgbHIKICAgICAgdGl0bGUgIlN5c3RlbSBDb250ZXh0OiBIZWFsdGhjYXJlIENSTSBpbnRlcmFjdGluZyB3aXRoIFVzZXJzIgogICAgICBkZXNjcmlwdGlvbiAiU2hvd3MgdGhlIEhlYWx0aGNhcmUgQ1JNIHN5c3RlbSBhbmQgaXRzIGludGVyYWN0aW9ucyB3aXRoIGV4dGVybmFsIHVzZXJzIGFuZCBBUEkgY2xpZW50cy4iCiAgICB9CgogICAgY29udGFpbmVyIGhlYWx0aGNhcmVDUk0gIkNvbnRhaW5lcnMiIHsKICAgICAgaW5jbHVkZSAqCiAgICAgIGluY2x1ZGUgd2ViVXNlcgogICAgICBpbmNsdWRlIGFwaUNsaWVudAogICAgICBhdXRvbGF5b3V0IGxyCiAgICAgIHRpdGxlICJDb250YWluZXIgRGlhZ3JhbTogU3ByaW5nIEJvb3QgQXBwICYgTXlTUUwgRGF0YWJhc2UiCiAgICAgIGRlc2NyaXB0aW9uICJIaWdoLWxldmVsIGNvbnRhaW5lcnMgYW5kIGhvdyB0aGV5IGludGVyYWN0LiIKICAgIH0KCiAgICBjb21wb25lbnQgYXBwICJDb21wb25lbnRzIiB7CiAgICAgIGluY2x1ZGUgKgogICAgICBpbmNsdWRlIHdlYlVzZXIKICAgICAgaW5jbHVkZSBhcGlDbGllbnQKICAgICAgaW5jbHVkZSBkYgogICAgICBhdXRvbGF5b3V0IGxyCiAgICAgIHRpdGxlICJDb21wb25lbnQgRGlhZ3JhbTogSW5zaWRlIHRoZSBTcHJpbmcgQm9vdCBBcHBsaWNhdGlvbiIKICAgICAgZGVzY3JpcHRpb24gIktleSBjb21wb25lbnRzIGFuZCB0aGVpciByZWxhdGlvbnNoaXBzLiIKICAgIH0KCiAgICBkZXBsb3ltZW50IGhlYWx0aGNhcmVDUk0gZG9ja2VyQ29tcG9zZSAiRG9ja2VyRGVwbG95bWVudCIgewogICAgICBpbmNsdWRlICoKICAgICAgYXV0b2xheW91dCBscgogICAgICB0aXRsZSAiRGVwbG95bWVudCBWaWV3OiBEb2NrZXIgQ29tcG9zZSIKICAgICAgZGVzY3JpcHRpb24gIlNob3dzIGhvdyBjb250YWluZXJzIHJ1biBvbiB5b3VyIERvY2tlciBob3N0LiIKICAgIH0KCiAgICBzdHlsZXMgewogICAgICBlbGVtZW50ICJQZXJzb24iIHsKICAgICAgICBzaGFwZSBQZXJzb24KICAgICAgICBiYWNrZ3JvdW5kICMwODQyN2IKICAgICAgICBjb2xvciAjZmZmZmZmCiAgICAgIH0KICAgICAgZWxlbWVudCAiU29mdHdhcmUgU3lzdGVtIiB7CiAgICAgICAgc2hhcGUgUm91bmRlZEJveAogICAgICAgIGJhY2tncm91bmQgIzExNjhiZAogICAgICAgIGNvbG9yICNmZmZmZmYKICAgICAgfQogICAgICBlbGVtZW50ICJDb250YWluZXIiIHsKICAgICAgICBzaGFwZSBSb3VuZGVkQm94CiAgICAgICAgYmFja2dyb3VuZCAjNDM4ZGQ1CiAgICAgICAgY29sb3IgI2ZmZmZmZgogICAgICB9CiAgICAgIGVsZW1lbnQgIkNvbXBvbmVudCIgewogICAgICAgIHNoYXBlIENvbXBvbmVudAogICAgICAgIGJhY2tncm91bmQgIzg1YmJmMAogICAgICAgIGNvbG9yICMwMDAwMDAKICAgICAgfQogICAgICBlbGVtZW50ICJEYXRhYmFzZSIgewogICAgICAgIHNoYXBlIEN5bGluZGVyCiAgICAgICAgYmFja2dyb3VuZCAjZmY3NzAwCiAgICAgICAgY29sb3IgI2ZmZmZmZgogICAgICB9CiAgICAgIGVsZW1lbnQgIkFwcGxpY2F0aW9uIiB7CiAgICAgICAgYmFja2dyb3VuZCAjMjJhYTIyCiAgICAgICAgY29sb3IgI2ZmZmZmZgogICAgICB9CiAgICAgIGVsZW1lbnQgIkRlcGxveW1lbnQgTm9kZSIgewogICAgICAgIHNoYXBlIFJvdW5kZWRCb3gKICAgICAgICBiYWNrZ3JvdW5kICNmZmZmZmYKICAgICAgICBjb2xvciAjMDAwMDAwCiAgICAgICAgc3Ryb2tlICNhYWFhYWEKICAgICAgfQogICAgICBlbGVtZW50ICJDb250YWluZXIgSW5zdGFuY2UiIHsKICAgICAgICBzaGFwZSBIZXhhZ29uCiAgICAgICAgYmFja2dyb3VuZCAjY2NjY2NjCiAgICAgICAgY29sb3IgIzAwMDAwMAogICAgICB9CiAgICAgIHJlbGF0aW9uc2hpcCAiUmVsYXRpb25zaGlwIiB7CiAgICAgICAgcm91dGluZyBPcnRob2dvbmFsCiAgICAgIH0KICAgIH0KICB9Cn0="
+  },
+  "views" : {
+    "componentViews" : [ {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "containerId" : "4",
+      "description" : "Key components and their relationships.",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "Components",
+      "order" : 3,
+      "relationships" : [ {
+        "id" : "20"
+      }, {
+        "id" : "23"
+      }, {
+        "id" : "24"
+      }, {
+        "id" : "25"
+      }, {
+        "id" : "26"
+      }, {
+        "id" : "27"
+      }, {
+        "id" : "28"
+      }, {
+        "id" : "29"
+      }, {
+        "id" : "30"
+      }, {
+        "id" : "31"
+      }, {
+        "id" : "32"
+      } ],
+      "title" : "Component Diagram: Inside the Spring Boot Application"
+    } ],
+    "configuration" : {
+      "branding" : { },
+      "lastSavedView" : "DockerDeployment",
+      "metadataSymbols" : "SquareBrackets",
+      "styles" : {
+        "elements" : [ {
+          "background" : "#08427b",
+          "color" : "#ffffff",
+          "shape" : "Person",
+          "tag" : "Person"
+        }, {
+          "background" : "#1168bd",
+          "color" : "#ffffff",
+          "shape" : "RoundedBox",
+          "tag" : "Software System"
+        }, {
+          "background" : "#438dd5",
+          "color" : "#ffffff",
+          "shape" : "RoundedBox",
+          "tag" : "Container"
+        }, {
+          "background" : "#85bbf0",
+          "color" : "#000000",
+          "shape" : "Component",
+          "tag" : "Component"
+        }, {
+          "background" : "#ff7700",
+          "color" : "#ffffff",
+          "shape" : "Cylinder",
+          "tag" : "Database"
+        }, {
+          "background" : "#22aa22",
+          "color" : "#ffffff",
+          "tag" : "Application"
+        }, {
+          "background" : "#ffffff",
+          "color" : "#000000",
+          "shape" : "RoundedBox",
+          "stroke" : "#aaaaaa",
+          "tag" : "Deployment Node"
+        }, {
+          "background" : "#cccccc",
+          "color" : "#000000",
+          "shape" : "Hexagon",
+          "tag" : "Container Instance"
+        } ],
+        "relationships" : [ {
+          "routing" : "Orthogonal",
+          "tag" : "Relationship"
+        } ]
+      },
+      "terminology" : { }
+    },
+    "containerViews" : [ {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "description" : "High-level containers and how they interact.",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "Containers",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "18"
+      }, {
+        "id" : "21"
+      }, {
+        "id" : "33"
+      }, {
+        "id" : "34"
+      } ],
+      "softwareSystemId" : "3",
+      "title" : "Container Diagram: Spring Boot App & MySQL Database"
+    } ],
+    "deploymentViews" : [ {
+      "automaticLayout" : {
+        "applied" : true,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "description" : "Shows how containers run on your Docker host.",
+      "dimensions" : {
+        "height" : 931,
+        "width" : 1640
+      },
+      "elements" : [ {
+        "id" : "35",
+        "x" : 175,
+        "y" : 175
+      }, {
+        "id" : "36",
+        "x" : 219,
+        "y" : 203
+      }, {
+        "id" : "37",
+        "x" : 969,
+        "y" : 203
+      } ],
+      "environment" : "Docker Compose",
+      "key" : "DockerDeployment",
+      "order" : 4,
+      "relationships" : [ {
+        "id" : "38",
+        "vertices" : [ {
+          "x" : 819,
+          "y" : 547
+        } ]
+      }, {
+        "id" : "39",
+        "vertices" : [ {
+          "x" : 819,
+          "y" : 247
+        } ]
+      } ],
+      "softwareSystemId" : "3",
+      "title" : "Deployment View: Docker Compose"
+    } ],
+    "systemContextViews" : [ {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "description" : "Shows the Healthcare CRM system and its interactions with external users and API clients.",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "SystemContext",
+      "order" : 1,
+      "relationships" : [ {
+        "id" : "19"
+      }, {
+        "id" : "22"
+      } ],
+      "softwareSystemId" : "3",
+      "title" : "System Context: Healthcare CRM interacting with Users"
+    } ]
+  }
+}
