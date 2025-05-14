@@ -1,47 +1,36 @@
 version: "3.8"
 
+# This docker-compose.yml file expects a .env file in the same directory
+# with the following variables defined:
+# RDS_ENDPOINT=your_rds_instance_endpoint_here
+# RDS_USERNAME=your_rds_username_here
+# RDS_PASSWORD=your_rds_password_here
+# DB_NAME=healthcarecrm (or your database name)
+
 services:
   app:
-    build: .
+    build: . # This tells Docker to build an image from the Dockerfile in the current directory
     container_name: healthcarecrm-app
     ports:
-      - "8080:8080"
+      - "8080:8080" # Maps port 8080 of the container to port 8080 on your host machine
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/healthcarecrm?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-    depends_on:
-      db: # Modified depends_on structure
-        condition: service_healthy # Wait for db to pass healthcheck
-    # networks: # Optional: define networks if needed, often works with default
-    #   - backend_network
+      # These environment variables are passed to the Spring Boot application inside the container.
+      # They will override any corresponding values in application.properties if Spring Boot is configured
+      # to use environment variables (which it does by default for these properties).
+      - SPRING_DATASOURCE_URL=jdbc:mysql://${RDS_ENDPOINT}:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true
+      # For production, you'd want useSSL=true and configure the truststore as discussed previously.
 
-  db:
-    image: mysql:8.0
-    container_name: healthcarecrm-db
-    # Optional: Map host port 3307 to container port 3306
-    ports:
-      - "3307:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=healthcarecrm
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck: # Added healthcheck
-      test: [
-          "CMD-SHELL",
-          "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}",
-        ] # Command to check health
-      interval: 10s # Check every 10 seconds
-      timeout: 5s # Wait 5 seconds for check to return
-      retries: 5 # Retry 5 times before marking unhealthy
-      start_period: 30s # Grace period for initial startup
-    # networks: # Optional
-    #   - backend_network
+      - SPRING_DATASOURCE_USERNAME=${RDS_USERNAME}
 
-volumes:
-  mysql_data:
-# Optional: define networks if needed
-# networks:
-#  backend_network:
-#    driver: bridge
+      - SPRING_DATASOURCE_PASSWORD=${RDS_PASSWORD}
+
+      # Optional: You can also set other Spring Boot properties here if needed
+      # For example, if you want ddl-auto to be configurable via .env:
+      # In .env: SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Here: - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      # - SERVER_PORT=8080 # Though this is usually handled by the Dockerfile or Spring default
+
+# 'volumes' section is removed as mysql_data is no longer needed without a local db service.
+# 'networks' section is also not strictly needed for this simple setup,
+# as the 'app' container will access RDS over the internet (or your default Docker bridge network).
+
